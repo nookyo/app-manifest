@@ -1,0 +1,11 @@
+version: "2.0"
+name: sandbox
+dockerConfig:
+  groupUri: 123456789.dkr.ecr.eu-west-1.amazonaws.com
+  groupName: docker
+  snapshotUri: 123456789.dkr.ecr.eu-west-1.amazonaws.com
+  stagingUri: 123456789.dkr.ecr.eu-west-1.amazonaws.com
+  releaseUri: 123456789.dkr.ecr.eu-west-1.amazonaws.com
+helmAppConfig:
+  repositoryDomainName: https://nexus.mycompany.internal/repository/helm-charts
+  helmGroupRepoName: helm-group

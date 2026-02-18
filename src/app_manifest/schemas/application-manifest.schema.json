@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://qubership.org/schema/application.sbom.schema.json",
+  "type": "object",
+  "title": "Cloud application SBOM",
+  "required": [
+    "$schema",
+    "bomFormat",
+    "specVersion",
+    "serialNumber",
+    "version",
+    "metadata",
+    "components",
+    "dependencies"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "bomFormat": {
+      "type": "string",
+      "enum": ["CycloneDX"]
+    },
+    "specVersion": {
+      "type": "string",
+      "examples": ["1.6"]
+    },
+    "serialNumber": {
+      "type": "string",
+      "pattern": "^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata-application"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/application-component" },
+          { "$ref": "#/definitions/helm-chart" },
+          { "$ref": "#/definitions/docker-image" },
+          { "$ref": "#/definitions/pipeline" },
+          { "$ref": "#/definitions/zip-artifact" },
+          { "$ref": "#/definitions/helm-values-schema" }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/dependency" },
+      "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "refLinkType": {
+      "$ref": "#/definitions/refType"
+    },
+    "refType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "dependency": {
+      "type": "object",
+      "required": ["ref", "dependsOn"],
+      "additionalProperties": false,
+      "properties": {
+        "ref": { "$ref": "#/definitions/refLinkType" },
+        "dependsOn": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/refLinkType" }
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "required": ["content"],
+      "additionalProperties": false,
+      "properties": {
+        "contentType": { "type": "string" },
+        "encoding": { "type": "string", "enum": ["base64"] },
+        "content": { "type": "string" }
+      }
+    },
+    "hash": {
+      "type": "object",
+      "required": ["alg", "content"],
+      "additionalProperties": false,
+      "properties": {
+        "alg": { "$ref": "#/definitions/hash-alg" },
+        "content": { "$ref": "#/definitions/hash-content" }
+      }
+    },
+    "hash-alg": {
+      "type": "string",
+      "enum": ["MD5","SHA-1","SHA-256","SHA-384","SHA-512","SHA3-256","SHA3-384","SHA3-512","BLAKE2b-256","BLAKE2b-384","BLAKE2b-512","BLAKE3"]
+    },
+    "hash-content": {
+      "type": "string",
+      "pattern": "^([a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64}|[a-fA-F0-9]{96}|[a-fA-F0-9]{128})$"
+    },
+    "metadata-application": {
+      "type": "object",
+      "required": ["timestamp", "component", "tools"],
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "component": {
+          "type": "object",
+          "required": ["type", "mime-type", "bom-ref", "name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["application"] },
+            "mime-type": { "type": "string", "enum": ["application/vnd.nc.application"] },
+            "bom-ref": { "$ref": "#/definitions/refType" },
+            "name": { "type": "string" },
+            "version": { "$ref": "#/definitions/version" }
+          }
+        },
+        "tools": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "name", "version"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "type": "string", "enum": ["application"] },
+                  "name": { "type": "string" },
+                  "version": { "$ref": "#/definitions/version" }
+                }
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "docker-image": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "group", "name", "version", "purl"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["container"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.docker.image"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "group": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "$ref": "#/definitions/version" },
+        "hashes": { "type": "array", "items": { "$ref": "#/definitions/hash" } },
+        "purl": { "type": "string" }
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["data"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.nc.standalone-runnable"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "name": { "type": "string" },
+        "version": { "$ref": "#/definitions/version" },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "oneOf": [{"type": "string"}, {"type": "array"}, {"type": "object"}, {"type": "boolean"}] }
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/definitions/zip-artifact" },
+              { "$ref": "#/definitions/docker-image" }
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "zip-artifact": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "group", "name", "version", "hashes", "purl"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["data"] },
+        "mime-type": { "type": "string", "enum": ["application/zip"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "group": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "$ref": "#/definitions/version" },
+        "hashes": { "type": "array", "items": { "$ref": "#/definitions/hash" } },
+        "purl": { "type": "string" },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "oneOf": [{"type": "string"}, {"type": "array"}, {"type": "object"}, {"type": "boolean"}] }
+            }
+          }
+        }
+      }
+    },
+    "resource-profile-baseline": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "name", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["data"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.nc.resource-profile-baseline"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "name": { "type": "string", "const": "resource-profile-baselines" },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "name", "contents"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string", "enum": ["configuration"] },
+              "name": { "type": "string" },
+              "contents": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "attachment": { "$ref": "#/definitions/attachment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "helm-values-schema": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "name", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["data"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.nc.helm.values.schema"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "name": { "type": "string" },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "name", "contents"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string", "enum": ["configuration"] },
+              "name": { "type": "string" },
+              "contents": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "attachment": { "$ref": "#/definitions/attachment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "helm-chart": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "name", "properties", "components"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["application"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.nc.helm.chart"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "name": { "type": "string" },
+        "version": { "$ref": "#/definitions/version" },
+        "hashes": { "type": "array", "items": { "$ref": "#/definitions/hash" } },
+        "purl": { "type": "string" },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "oneOf": [{"type": "string"}, {"type": "array"}, {"type": "object"}, {"type": "boolean"}] }
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "$ref": "#/definitions/helm-chart" },
+              { "$ref": "#/definitions/helm-values-schema" },
+              { "$ref": "#/definitions/resource-profile-baseline" }
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "application-component": {
+      "type": "object",
+      "required": ["type", "mime-type", "bom-ref", "name", "properties", "components"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["application"] },
+        "mime-type": { "type": "string", "enum": ["application/vnd.nc.standalone-runnable"] },
+        "bom-ref": { "$ref": "#/definitions/refType" },
+        "name": { "type": "string" },
+        "version": { "$ref": "#/definitions/version" },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "oneOf": [{"type": "string"}, {"type": "array"}, {"type": "object"}, {"type": "boolean"}] }
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 0
+        }
+      }
+    }
+  }
+}

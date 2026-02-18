@@ -1,0 +1,27 @@
+applicationVersion: "1.2.3"
+applicationName: "qubership-jaeger"
+components:
+  - name: qubership-jaeger
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-jaeger
+        mimeType: application/vnd.nc.helm.chart
+
+  - name: qubership-jaeger
+    mimeType: application/vnd.nc.helm.chart
+    reference: "oci://sandbox.example.com/charts/qubership-jaeger:1.2.3"
+    dependsOn:
+      - name: jaeger
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.jaeger
+      - name: envoy
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.envoy
+
+  - name: jaeger
+    mimeType: application/vnd.docker.image
+    reference: "sandbox.example.com/core/jaeger:build3"
+
+  - name: envoy
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/envoyproxy/envoy:v1.32.6"

@@ -1,0 +1,11 @@
+{
+  "name": "qubership-integration-runtime-catalog",
+  "type": "container",
+  "mime-type": "application/vnd.docker.image",
+  "group": "core",
+  "version": "build3",
+  "hashes": [
+    {"alg": "SHA-256", "content": "bbb222ccc333ddd444eee555fff666aaa111"}
+  ],
+  "reference": "registry.qubership.org/core/qubership-integration-runtime-catalog:build3"
+}

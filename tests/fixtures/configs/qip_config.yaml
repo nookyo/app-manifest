@@ -1,0 +1,36 @@
+applicationVersion: "1.2.3"
+applicationName: "qubership-integration-platform"
+components:
+  - name: qubership-integration-platform
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-integration-platform
+        mimeType: application/vnd.nc.helm.chart
+
+  - name: qubership-integration-platform
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: qip-engine
+        mimeType: application/vnd.nc.helm.chart
+      - name: qip-runtime-catalog
+        mimeType: application/vnd.nc.helm.chart
+
+  - name: qip-engine
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: qubership-integration-engine
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: ""
+
+  - name: qip-runtime-catalog
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: qubership-integration-runtime-catalog
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: ""
+
+  - name: qubership-integration-engine
+    mimeType: application/vnd.docker.image
+
+  - name: qubership-integration-runtime-catalog
+    mimeType: application/vnd.docker.image

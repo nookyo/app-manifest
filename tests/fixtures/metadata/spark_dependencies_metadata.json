@@ -1,0 +1,14 @@
+{
+  "name": "spark-dependencies-image",
+  "type": "container",
+  "mime-type": "application/vnd.docker.image",
+  "group": "qubership",
+  "version": "1.2.3",
+  "hashes": [
+    {
+      "alg": "SHA-256",
+      "content": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+    }
+  ],
+  "reference": "sandbox.example.com/qubership/spark-dependencies-image:1.2.3"
+}

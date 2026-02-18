@@ -1,0 +1,49 @@
+applicationVersion: "3.5.1"
+applicationName: "qubership-monitoring-platform"
+components:
+
+  - name: qubership-monitoring-platform
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-monitoring-platform
+        mimeType: application/vnd.nc.helm.chart
+
+  - name: qubership-monitoring-platform
+    mimeType: application/vnd.nc.helm.chart
+    reference: "oci://sandbox.example.com/charts/qubership-monitoring-platform:3.5.1"
+    dependsOn:
+      - name: prometheus
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.prometheus
+      - name: grafana
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.grafana
+      - name: nginx
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.nginx
+      - name: oauth2-proxy
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.oauthProxy
+      - name: alertmanager
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.alertmanager
+
+  # Образы из CI — reference в конфиге отсутствует (mini-manifest строит component)
+  - name: prometheus
+    mimeType: application/vnd.docker.image
+
+  - name: grafana
+    mimeType: application/vnd.docker.image
+
+  # Сторонние образы — reference в конфиге есть (mini-manifest строит fetch)
+  - name: nginx
+    mimeType: application/vnd.docker.image
+    reference: "nginx:1.27.0"
+
+  - name: oauth2-proxy
+    mimeType: application/vnd.docker.image
+    reference: "ghcr.io/oauth2-proxy/oauth2-proxy:v7.7.0"
+
+  - name: alertmanager
+    mimeType: application/vnd.docker.image
+    reference: "sandbox.example.com/monitoring/alertmanager:v0.27.0"

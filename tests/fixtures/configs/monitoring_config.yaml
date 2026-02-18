@@ -1,0 +1,58 @@
+applicationVersion: "3.5.1"
+applicationName: "qubership-monitoring-platform"
+components:
+
+  # ── Standalone runnable (точка входа) ─────────────────────────────────────
+  - name: qubership-monitoring-platform
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-monitoring-platform
+        mimeType: application/vnd.nc.helm.chart
+
+  # ── Helm chart (OCI registry) ─────────────────────────────────────────────
+  - name: qubership-monitoring-platform
+    mimeType: application/vnd.nc.helm.chart
+    reference: "oci://sandbox.example.com/charts/qubership-monitoring-platform:3.5.1"
+    dependsOn:
+      - name: prometheus
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.prometheus
+      - name: grafana
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.grafana
+      - name: alertmanager
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.alertmanager
+      - name: oauth2-proxy
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.oauthProxy
+      - name: nginx
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.nginx
+
+  # ── Docker images (разные форматы reference) ──────────────────────────────
+
+  # docker.io с организацией (explicit docker.io prefix)
+  - name: prometheus
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/prom/prometheus:v2.52.0"
+
+  # docker.io с организацией (без явного docker.io)
+  - name: grafana
+    mimeType: application/vnd.docker.image
+    reference: "grafana/grafana:10.4.2"
+
+  # docker.io (bare image name — library namespace)
+  - name: nginx
+    mimeType: application/vnd.docker.image
+    reference: "nginx:1.27.0"
+
+  # GitHub Container Registry
+  - name: oauth2-proxy
+    mimeType: application/vnd.docker.image
+    reference: "ghcr.io/oauth2-proxy/oauth2-proxy:v7.7.0"
+
+  # Кастомный приватный registry
+  - name: alertmanager
+    mimeType: application/vnd.docker.image
+    reference: "sandbox.example.com/monitoring/alertmanager:v0.27.0"

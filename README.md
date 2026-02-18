@@ -1,0 +1,89 @@
+# am — Application Manifest CLI
+
+CLI tool for generating **Application Manifest v2** files in
+[CycloneDX 1.6](https://cyclonedx.org/specification/overview/) BOM format.
+
+A manifest describes the full composition of an application —
+Docker images, Helm charts, and their dependency graph —
+as a single JSON file for auditing, deployment tracking, and release management.
+
+---
+
+## Installation
+
+```bash
+pip install -e .
+am --help
+```
+
+Requires **Python 3.12+** and `helm` CLI (for the `fetch` command).
+
+---
+
+## Quick start
+
+```bash
+# 1. CI-built images to mini-manifests
+am c -i ci/jaeger-meta.json -o minis/jaeger.json
+
+# 2. Helm chart + reference images to mini-manifests
+am f -c build-config.yaml -o minis/
+
+# 3. Assemble and validate the final manifest
+am gen -c build-config.yaml -o manifest.json --validate minis/
+```
+
+---
+
+## Commands
+
+| Command     | Alias | Description                                      |
+| ----------- | ----- | ------------------------------------------------ |
+| `component` | `c`   | CI metadata JSON to mini-manifest                |
+| `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest   |
+| `generate`  | `gen` | Mini-manifests + build config to final manifest  |
+| `validate`  | `v`   | Validate manifest against JSON Schema            |
+
+---
+
+## Documentation
+
+| Document                                           | Description                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| [docs/usage.md](docs/usage.md)                     | Workflow, build config format, component types, registry definition |
+| [docs/commands.md](docs/commands.md)               | Full reference for all four commands and their options             |
+| [docs/mini-manifests.md](docs/mini-manifests.md)   | Mini-manifest format, file naming rules, collision handling        |
+| [docs/manifest-assembly.md](docs/manifest-assembly.md) | How `generate` assembles the final manifest                   |
+| [docs/examples.md](docs/examples.md)               | Complete Jaeger example: config, metadata, and final manifest      |
+
+---
+
+## Project structure
+
+```
+app-manifest/
+├── src/app_manifest/
+│   ├── cli.py                  # CLI entry point (Click)
+│   ├── models/                 # Pydantic models
+│   │   ├── config.py           # Build config schema
+│   │   ├── cyclonedx.py        # CycloneDX BOM models
+│   │   ├── metadata.py         # CI metadata schema
+│   │   └── regdef.py           # Registry definition schema
+│   ├── services/               # Business logic
+│   │   ├── artifact_fetcher.py # Helm pull + Docker reference parsing
+│   │   ├── component_builder.py# CI metadata to mini-manifest
+│   │   ├── manifest_builder.py # Mini-manifests to final manifest
+│   │   ├── validator.py        # JSON Schema validation
+│   │   └── ...
+│   └── schemas/
+│       └── application-manifest.schema.json
+├── tests/
+│   ├── fixtures/
+│   │   ├── configs/            # Build config YAML files
+│   │   ├── metadata/           # CI metadata JSON files
+│   │   ├── regdefs/            # Registry definition YAML files
+│   │   └── examples/           # Generated manifest examples
+│   ├── test_e2e.py             # End-to-end pipeline tests
+│   └── ...
+└── docs/
+```

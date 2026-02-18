@@ -1,0 +1,14 @@
+{
+  "name": "qubership-deployment-status-provisioner",
+  "type": "container",
+  "mime-type": "application/vnd.docker.image",
+  "group": "qubership",
+  "version": "1.2.3",
+  "hashes": [
+    {
+      "alg": "SHA-256",
+      "content": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+    }
+  ],
+  "reference": "sandbox.example.com/qubership/qubership-deployment-status-provisioner:1.2.3"
+}

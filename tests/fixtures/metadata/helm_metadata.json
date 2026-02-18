@@ -1,0 +1,60 @@
+{
+  "name": "qubership-jaeger",
+  "type": "application",
+  "mime-type": "application/vnd.nc.helm.chart",
+  "version": "1.2.3",
+  "appVersion": "1.2.3",
+  "hashes": [
+    {"alg": "SHA-256", "content": "helmhash123"}
+  ],
+  "reference": "oci://registry.qubership.org/charts/qubership-jaeger:1.2.3",
+  "components": [
+    {
+      "type": "data",
+      "mime-type": "application/vnd.nc.helm.values.schema",
+      "name": "values.schema.json",
+      "data": [
+        {
+          "type": "configuration",
+          "name": "values.schema.json",
+          "contents": {
+            "attachment": {
+              "contentType": "application/json",
+              "encoding": "base64",
+              "content": "eyJ0eXBlIjogIm9iamVjdCJ9"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "mime-type": "application/vnd.nc.resource-profile-baseline",
+      "name": "resource-profile-baselines",
+      "data": [
+        {
+          "type": "configuration",
+          "name": "small.yaml",
+          "contents": {
+            "attachment": {
+              "contentType": "application/yaml",
+              "encoding": "base64",
+              "content": "c21hbGw6IHRydWU="
+            }
+          }
+        },
+        {
+          "type": "configuration",
+          "name": "large.yaml",
+          "contents": {
+            "attachment": {
+              "contentType": "application/yaml",
+              "encoding": "base64",
+              "content": "bGFyZ2U6IHRydWU="
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

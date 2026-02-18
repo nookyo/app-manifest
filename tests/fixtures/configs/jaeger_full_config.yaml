@@ -1,0 +1,89 @@
+applicationVersion: "1.2.3"
+applicationName: "jaeger"
+components:
+
+  - name: cassandra
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-jaeger
+        mimeType: application/vnd.nc.helm.chart
+
+  - name: qubership-jaeger
+    mimeType: application/vnd.nc.helm.chart
+    reference: "oci://sandbox.example.com/charts/qubership-jaeger:1.2.3"
+    dependsOn:
+      - name: jaeger-cassandra-schema
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: cassandraSchema
+      - name: jaeger
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: jaeger
+      - name: jaeger-readiness-probe
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: readinessProbe
+      - name: example-hotrod
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: exampleHotrod
+      - name: jaeger-integration-tests
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: integrationTests
+      - name: jaeger-es-index-cleaner
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: elasticsearch.indexCleaner
+      - name: jaeger-es-rollover
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: elasticsearch.rollover
+      - name: envoy
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: proxy
+      - name: openjdk
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: .
+      - name: spark-dependencies-image
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: spark
+      - name: qubership-deployment-status-provisioner
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: statusProvisioner
+
+  # Docker images with reference — mini-manifest built by fetch
+  - name: jaeger-cassandra-schema
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/jaegertracing/jaeger-cassandra-schema:1.72.0"
+
+  - name: jaeger
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/jaegertracing/jaeger:2.9.0"
+
+  - name: example-hotrod
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/jaegertracing/example-hotrod:1.72.0"
+
+  - name: jaeger-es-index-cleaner
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/jaegertracing/jaeger-es-index-cleaner:1.72.0"
+
+  - name: jaeger-es-rollover
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/jaegertracing/jaeger-es-rollover:1.72.0"
+
+  - name: envoy
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/envoyproxy/envoy:v1.32.6"
+
+  - name: openjdk
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/library/openjdk:11"
+
+  # Docker images without reference — mini-manifest built by component (CI metadata)
+  - name: jaeger-readiness-probe
+    mimeType: application/vnd.docker.image
+
+  - name: jaeger-integration-tests
+    mimeType: application/vnd.docker.image
+
+  - name: spark-dependencies-image
+    mimeType: application/vnd.docker.image
+
+  - name: qubership-deployment-status-provisioner
+    mimeType: application/vnd.docker.image

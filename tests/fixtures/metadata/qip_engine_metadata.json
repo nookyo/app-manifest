@@ -1,0 +1,11 @@
+{
+  "name": "qubership-integration-engine",
+  "type": "container",
+  "mime-type": "application/vnd.docker.image",
+  "group": "core",
+  "version": "build3",
+  "hashes": [
+    {"alg": "SHA-256", "content": "aaa111bbb222ccc333ddd444eee555fff666"}
+  ],
+  "reference": "registry.qubership.org/core/qubership-integration-engine:build3"
+}

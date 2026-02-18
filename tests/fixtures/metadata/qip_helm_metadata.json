@@ -1,0 +1,10 @@
+{
+  "name": "qubership-integration-platform",
+  "type": "application",
+  "mime-type": "application/vnd.nc.helm.chart",
+  "version": "1.2.3",
+  "hashes": [
+    {"alg": "SHA-256", "content": "ccc333ddd444eee555fff666aaa111bbb222"}
+  ],
+  "reference": "oci://registry.qubership.org/charts/qubership-integration-platform:1.2.3"
+}

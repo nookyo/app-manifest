@@ -1,0 +1,143 @@
+{
+  "serialNumber": "urn:uuid:8079847f-20f2-4f2f-9c12-f85fca0e1597",
+  "$schema": "../schemas/application-manifest.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-02-18T08:05:06Z",
+    "component": {
+      "bom-ref": "qubership-jaeger:37f82636-abed-4e20-8273-81f25bec4de7",
+      "type": "application",
+      "mime-type": "application/vnd.nc.application",
+      "name": "qubership-jaeger",
+      "version": "1.2.3"
+    },
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "am-build-cli",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "qubership-jaeger:e1133017-fd1e-4bdd-845e-2f66e8decea7",
+      "type": "application",
+      "mime-type": "application/vnd.nc.standalone-runnable",
+      "name": "qubership-jaeger",
+      "version": "1.2.3",
+      "properties": [],
+      "components": []
+    },
+    {
+      "bom-ref": "qubership-jaeger:230982d3-7068-48c2-8666-070406d8d59e",
+      "type": "application",
+      "mime-type": "application/vnd.nc.helm.chart",
+      "name": "qubership-jaeger",
+      "version": "1.2.3",
+      "purl": "pkg:helm/charts/qubership-jaeger@1.2.3?registry_name=sandbox.example.com",
+      "properties": [
+        {
+          "name": "isLibrary",
+          "value": false
+        },
+        {
+          "name": "qubership:helm.values.artifactMappings",
+          "value": {
+            "jaeger:7ab2a95a-852b-46aa-ab34-4e1a9ba14726": {
+              "valuesPathPrefix": "images.jaeger"
+            },
+            "envoy:4ce2de41-c8d8-4970-aef7-72761d77a485": {
+              "valuesPathPrefix": "images.envoy"
+            }
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b8843624c985879af20ea831ea2ff29698ec128e7a34e13bda0b432b901c6fc9"
+        }
+      ],
+      "components": [
+        {
+          "bom-ref": "values.schema.json:89532557-3f65-4230-8203-e3b98c79cb30",
+          "type": "data",
+          "mime-type": "application/vnd.nc.helm.values.schema",
+          "name": "values.schema.json",
+          "data": [
+            {
+              "type": "configuration",
+              "name": "values.schema.json",
+              "contents": {
+                "attachment": {
+                  "contentType": "application/json",
+                  "encoding": "base64",
+                  "content": "eyJ0eXBlIjogIm9iamVjdCIsICJwcm9wZXJ0aWVzIjoge319"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "bom-ref": "jaeger:7ab2a95a-852b-46aa-ab34-4e1a9ba14726",
+      "type": "container",
+      "mime-type": "application/vnd.docker.image",
+      "name": "jaeger",
+      "version": "build3",
+      "group": "core",
+      "purl": "pkg:docker/core/jaeger@build3?registry_name=sandbox.example.com",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        }
+      ]
+    },
+    {
+      "bom-ref": "envoy:4ce2de41-c8d8-4970-aef7-72761d77a485",
+      "type": "container",
+      "mime-type": "application/vnd.docker.image",
+      "name": "envoy",
+      "version": "v1.32.6",
+      "group": "envoyproxy",
+      "purl": "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=ghcr.io",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6b2c3"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "qubership-jaeger:37f82636-abed-4e20-8273-81f25bec4de7",
+      "dependsOn": [
+        "qubership-jaeger:e1133017-fd1e-4bdd-845e-2f66e8decea7",
+        "qubership-jaeger:230982d3-7068-48c2-8666-070406d8d59e",
+        "jaeger:7ab2a95a-852b-46aa-ab34-4e1a9ba14726",
+        "envoy:4ce2de41-c8d8-4970-aef7-72761d77a485"
+      ]
+    },
+    {
+      "ref": "qubership-jaeger:e1133017-fd1e-4bdd-845e-2f66e8decea7",
+      "dependsOn": [
+        "qubership-jaeger:230982d3-7068-48c2-8666-070406d8d59e"
+      ]
+    },
+    {
+      "ref": "qubership-jaeger:230982d3-7068-48c2-8666-070406d8d59e",
+      "dependsOn": [
+        "jaeger:7ab2a95a-852b-46aa-ab34-4e1a9ba14726",
+        "envoy:4ce2de41-c8d8-4970-aef7-72761d77a485"
+      ]
+    }
+  ]
+}

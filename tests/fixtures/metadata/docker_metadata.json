@@ -1,0 +1,14 @@
+{
+  "name": "jaeger",
+  "type": "container",
+  "mime-type": "application/vnd.docker.image",
+  "group": "core",
+  "version": "build3",
+  "hashes": [
+    {
+      "alg": "SHA-256",
+      "content": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+  ],
+  "reference": "sandbox.example.com/core/jaeger:build3"
+}
