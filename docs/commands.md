@@ -6,7 +6,7 @@ Each command has a short alias: `c` = `component`, `f` = `fetch`, `gen` = `gener
 
 ---
 
-## `component` — CI metadata to mini-manifest
+## `component` (`c`) — CI metadata to mini-manifest
 
 Converts a CI-produced metadata JSON file into a CycloneDX mini-manifest
 for a single Docker image or Helm chart.
@@ -80,7 +80,7 @@ am component \
 
 ---
 
-## `fetch` — artifacts with reference to mini-manifests
+## `fetch` (`f`) — artifacts with reference to mini-manifests
 
 Processes components from the build config that have a `reference` field,
 and creates mini-manifests for them:
@@ -202,7 +202,7 @@ but the config expects `(jaeger-app, helm.chart)` — this produces a **componen
 
 ---
 
-## `generate` — assemble the final manifest
+## `generate` (`gen`) — assemble the final manifest
 
 Reads all mini-manifests, matches them to the build config,
 and assembles the final Application Manifest JSON.
@@ -297,7 +297,7 @@ am generate \
 
 ---
 
-## `validate` — validate manifest against JSON Schema
+## `validate` (`v`) — validate manifest against JSON Schema
 
 Validates an existing manifest JSON file against the Application Manifest v2 JSON Schema.
 The schema is bundled with the package — no network requests are made.

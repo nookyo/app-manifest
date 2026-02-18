@@ -1,5 +1,18 @@
 # am CLI — Usage
 
+## Command Aliases
+
+Each command has a short alias:
+
+| Command     | Alias |
+| ----------- | ----- |
+| `component` | `c`   |
+| `fetch`     | `f`   |
+| `generate`  | `gen` |
+| `validate`  | `v`   |
+
+---
+
 ## Workflow
 
 The pipeline consists of three sequential steps:
