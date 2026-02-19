@@ -84,6 +84,11 @@ same application name, but are two different artifacts in the manifest.
 
 ### Example
 
+A full real-world config is available at
+[`tests/fixtures/configs/jaeger_full_config.yaml`](../tests/fixtures/configs/jaeger_full_config.yaml).
+
+Annotated minimal example:
+
 ```yaml
 applicationName: "qubership-jaeger"
 applicationVersion: "1.2.3"
