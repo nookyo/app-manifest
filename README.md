@@ -71,7 +71,7 @@ For a complete worked example see [docs/examples.md](docs/examples.md).
 
 | Document                                               | Description                                                         |
 | ------------------------------------------------------ | ------------------------------------------------------------------- |
-| [docs/usage.md](docs/usage.md)                         | Workflow, build config format, component types, registry definition |
+| [docs/usage.md](docs/usage.md)                         | **Build config format** — workflow, fields, component types, registry definition |
 | [docs/commands.md](docs/commands.md)                   | Full reference for all four commands and their options              |
 | [docs/mini-manifests.md](docs/mini-manifests.md)       | Mini-manifest format, file naming rules, collision handling         |
 | [docs/manifest-assembly.md](docs/manifest-assembly.md) | How `generate` assembles the final manifest                         |

@@ -1,4 +1,11 @@
-# am CLI — Usage
+# Build Config & Workflow
+
+The **build config** (`build-config.yaml`) is the main input file you write and maintain.
+It tells `am` what components make up your application, their types, where to find them,
+and how they depend on each other.
+
+This document covers: command aliases, the three-step workflow, build config format,
+component types, registry definition, and exit codes.
 
 ## Command Aliases
 
