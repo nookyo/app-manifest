@@ -27,8 +27,11 @@ You need two input files that you maintain yourself:
 
 - **`build-config.yaml`** — lists all components of your application (Docker images, Helm charts),
   their types, OCI references, and dependencies. You write this once per application.
+  See [docs/usage.md](docs/usage.md) for the format, field reference, and annotated example.
+
 - **CI metadata JSON** — produced by your CI system after building each image: contains
   the image name, version, SHA-256 hash, and registry reference. One file per CI-built image.
+  See [docs/commands.md](docs/commands.md#component-c--ci-metadata-to-mini-manifest) for the exact format and field descriptions.
 
 The pipeline produces intermediate files called **mini-manifests** — one per component —
 that are combined in the final step into the Application Manifest.
