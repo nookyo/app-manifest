@@ -238,4 +238,3 @@ This is useful for re-validating an existing manifest (e.g. after manual editing
 | `docker.io/envoyproxy/envoy:v1.32.6`                      | `pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io`                     |
 | `docker.io/library/openjdk:11`                            | `pkg:docker/library/openjdk@11?registry_name=docker.io`                           |
 | `oci://sandbox.example.com/charts/qubership-jaeger:1.2.3` | `pkg:helm/charts/qubership-jaeger@1.2.3?registry_name=sandbox.example.com`        |
-А
