@@ -25,7 +25,16 @@ Options:
 
 ### Input format
 
-A CI metadata file is a JSON object describing one component:
+Your CI pipeline must produce one JSON file per built component.
+`am component` reads this file and converts it into a mini-manifest.
+
+> **Contract**: the fields `name` and `mime-type` must exactly match
+> the corresponding `name` and `mimeType` in `build-config.yaml`,
+> otherwise `am generate` will not be able to find the component.
+
+#### Docker image (typical case)
+
+Produced after `docker build && docker push`:
 
 ```json
 {
@@ -43,6 +52,68 @@ A CI metadata file is a JSON object describing one component:
   "reference": "sandbox.example.com/core/jaeger:build3"
 }
 ```
+
+#### Helm chart built in CI
+
+Produced after `helm package && helm push`.
+Includes nested components extracted from the chart archive
+(`values.schema.json`, resource profiles):
+
+```json
+{
+  "name": "qubership-jaeger",
+  "type": "application",
+  "mime-type": "application/vnd.nc.helm.chart",
+  "version": "1.2.3",
+  "appVersion": "1.2.3",
+  "hashes": [
+    { "alg": "SHA-256", "content": "e3b0c44298fc1c149afbf4c8996fb924..." }
+  ],
+  "reference": "oci://registry.qubership.org/charts/qubership-jaeger:1.2.3",
+  "components": [
+    {
+      "type": "data",
+      "mime-type": "application/vnd.nc.helm.values.schema",
+      "name": "values.schema.json",
+      "data": [
+        {
+          "type": "configuration",
+          "name": "values.schema.json",
+          "contents": {
+            "attachment": {
+              "contentType": "application/json",
+              "encoding": "base64",
+              "content": "<base64-encoded values.schema.json>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "mime-type": "application/vnd.nc.resource-profile-baseline",
+      "name": "resource-profile-baselines",
+      "data": [
+        {
+          "type": "configuration",
+          "name": "small.yaml",
+          "contents": {
+            "attachment": {
+              "contentType": "application/yaml",
+              "encoding": "base64",
+              "content": "<base64-encoded small.yaml>"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Real fixture examples: [`tests/fixtures/metadata/`](../tests/fixtures/metadata/).
+
+#### Field reference
 
 | Field        | Required | Description                                                                    |
 | ------------ | -------- | ------------------------------------------------------------------------------ |
