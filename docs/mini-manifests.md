@@ -26,7 +26,7 @@ It is produced by the `component` or `fetch` commands, and consumed by `generate
     - [Component not found](#component-not-found)
   - [Warnings reference](#warnings-reference)
 
---- v
+---
 
 ## What is a mini-manifest
 
@@ -446,5 +446,3 @@ directly, so it never produces this warning.
 | `no group for component '{name}' (reference '...' has no namespace/org)` | `fetch`    | Docker reference has no org, e.g. `docker.io/envoy:v1` | `group` absent in mini-manifest; exit code 0 |
 
 All warnings go to **stderr** only and never affect the exit code.
-
-For fixes and common causes, see `docs/troubleshooting.md`.

@@ -82,6 +82,10 @@ am component \
 
 ## `fetch` (`f`) — artifacts with reference to mini-manifests
 
+> **Important**: the `name` in the build config must match the `name` field inside `Chart.yaml`
+> of the downloaded chart, otherwise `generate` will not find the component.
+> See [Chart name vs config name](#important-chart-name-vs-config-name) below.
+
 Processes components from the build config that have a `reference` field,
 and creates mini-manifests for them:
 

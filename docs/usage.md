@@ -43,51 +43,73 @@ into the final Application Manifest.
 The build config describes the application composition.
 It is required by both `fetch` and `generate`.
 
+### Component identity
+
+Each component is uniquely identified by the pair **`(name, mimeType)`**.
+This means two entries can share the same `name` as long as their `mimeType` differs —
+they are treated as completely separate components.
+
+This is intentional and enables the **umbrella Helm pattern**: a `standalone-runnable`
+(the deployment entry point) and a `helm.chart` (the actual Helm chart) often share the
+same application name, but are two different artifacts in the manifest.
+
 ```yaml
-applicationName: "qubership-jaeger"
-applicationVersion: "1.2.3"
+# These are TWO different components, not a duplicate:
+- name: qubership-jaeger
+  mimeType: application/vnd.nc.standalone-runnable   # deployment entry point
 
-components:
-  - name: qubership-jaeger
-    mimeType: application/vnd.nc.standalone-runnable
-    dependsOn:
-      - name: qubership-jaeger
-        mimeType: application/vnd.nc.helm.chart
-
-  - name: qubership-jaeger
-    mimeType: application/vnd.nc.helm.chart
-    reference: "oci://sandbox.example.com/charts/qubership-jaeger:1.2.3"
-    dependsOn:
-      - name: jaeger
-        mimeType: application/vnd.docker.image
-        valuesPathPrefix: images.jaeger
-      - name: envoy
-        mimeType: application/vnd.docker.image
-        valuesPathPrefix: images.envoy
-
-  - name: jaeger
-    mimeType: application/vnd.docker.image
-
-  - name: envoy
-    mimeType: application/vnd.docker.image
+- name: qubership-jaeger
+  mimeType: application/vnd.nc.helm.chart            # the Helm chart itself
 ```
 
-**Fields:**
+### Fields
 
 | Field                | Required | Description                                                                      |
 | -------------------- | -------- | -------------------------------------------------------------------------------- |
 | `applicationName`    | yes      | Name of the application (appears in `metadata.component`)                        |
 | `applicationVersion` | yes      | Version of the application                                                       |
 | `components[]`       | yes      | List of components                                                               |
-| `name`               | yes      | Component name                                                                   |
+| `name`               | yes      | Component name. Combined with `mimeType` it forms the unique component identity. |
 | `mimeType`           | yes      | Component type — see [Component Types](#component-types)                         |
-| `reference`          | no       | OCI URL; required by `fetch` for helm charts; used for PURL generation           |
-| `dependsOn[]`        | no       | List of dependencies                                                             |
-| `valuesPathPrefix`   | no       | Path in `values.yaml` for a docker image dependency (used in `artifactMappings`) |
+| `reference`          | no       | OCI URL. Required by `fetch` for Helm charts; also used for PURL generation.     |
+| `dependsOn[]`        | no       | List of components this component depends on                                     |
+| `valuesPathPrefix`   | no       | Helm values path for a Docker image dependency, e.g. `images.jaeger`. Used by `generate` to produce `artifactMappings` in the final manifest. |
 
-**Component identity** is the pair `(name, mimeType)`. Two entries with the same name
-but different `mimeType` are two distinct components — this is the basis for the
-umbrella Helm pattern.
+### Example
+
+```yaml
+applicationName: "qubership-jaeger"
+applicationVersion: "1.2.3"
+
+components:
+  # Deployment entry point — no mini-manifest needed, built from config directly
+  - name: qubership-jaeger
+    mimeType: application/vnd.nc.standalone-runnable
+    dependsOn:
+      - name: qubership-jaeger
+        mimeType: application/vnd.nc.helm.chart
+
+  # Helm chart — fetched from OCI registry by `am fetch`
+  - name: qubership-jaeger
+    mimeType: application/vnd.nc.helm.chart
+    reference: "oci://sandbox.example.com/charts/qubership-jaeger:1.2.3"
+    dependsOn:
+      - name: jaeger
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.jaeger   # key in values.yaml for this image
+      - name: envoy
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: images.envoy
+
+  # Docker images without reference — mini-manifests provided by CI via `am component`
+  - name: jaeger
+    mimeType: application/vnd.docker.image
+
+  # Docker images with reference — mini-manifests built by `am fetch` (no hash)
+  - name: envoy
+    mimeType: application/vnd.docker.image
+    reference: "docker.io/envoyproxy/envoy:v1.32.6"
+```
 
 ---
 
