@@ -148,7 +148,7 @@ for the full rules including collision handling.
 
 Short version:
 - Default: `{out-dir}/{name}.json` where `name` comes from the config
-- On collision (same name, different mime-type): `{out-dir}/{name}_{vendor}.json`
+- On collision (same name, different mime-type): `{out-dir}/{name}_{mime_suffix}.json` where `mime_suffix` is the mime-type without `application/`, dots replaced by underscores (e.g. `vnd_nc_helm_chart`)
 
 ### Examples
 
@@ -244,7 +244,7 @@ am generate -c cfg.yaml -o out.json minis/ extra/custom.json
 Matching is done by `(name, mime-type)` read from the mini-manifest content —
 **not by filename**.
 
-See [mini-manifests.md — Matching in `generate`](mini-manifests.md#matching-in-generate).
+See [mini-manifests.md — Matching in `generate`](mini-manifests.md#how-generate-loads-and-matches-mini-manifests).
 
 ### Assembly rules
 

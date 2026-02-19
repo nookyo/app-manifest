@@ -297,28 +297,24 @@ A collision occurs when two components in the config share the **same name** but
 file, with the second overwriting the first.
 
 `fetch` detects collisions **before writing any file** by counting occurrences of each name.
-If a name appears more than once, all components with that name use a **vendor-suffix** filename:
+If a name appears more than once, all components with that name use a **mime-type suffix** filename:
 
 ```
-{out-dir}/{config-name}_{vendor}.json
+{out-dir}/{config-name}_{mime_suffix}.json
 ```
 
-**Extracting the vendor from mime-type:**
+**Deriving the suffix from mime-type:**
 
-The mime-type follows the pattern `application/vnd.{vendor}.helm.chart`.
-The vendor is the segment between `vnd.` and the following `.`:
-
-```
-application/vnd.nc.helm.chart
-              ^^
-              vendor = "nc"
-```
+The suffix is everything after `application/`, with dots replaced by underscores:
 
 ```
-application/vnd.qubership.helm.chart
-              ^^^^^^^^^
-              vendor = "qubership"
+application/vnd.nc.helm.chart       ->  vnd_nc_helm_chart
+application/vnd.qubership.helm.chart ->  vnd_qubership_helm_chart
+application/vnd.docker.image        ->  vnd_docker_image
 ```
+
+This guarantees uniqueness — two components with the same name but different mime-types
+always produce different filenames, even if their vendor prefix is the same.
 
 **Full collision example:**
 
@@ -339,23 +335,22 @@ Without collision detection, both would go to `minis/my-chart.json`.
 With collision detection, `fetch` writes:
 
 ```
-minis/my-chart_nc.json          ← application/vnd.nc.helm.chart
-minis/my-chart_qubership.json   ← application/vnd.qubership.helm.chart
+minis/my-chart_vnd_nc_helm_chart.json          ← application/vnd.nc.helm.chart
+minis/my-chart_vnd_qubership_helm_chart.json   ← application/vnd.qubership.helm.chart
 ```
 
 And prints to stderr:
 ```
-WARNING: duplicate component name 'my-chart' — using filename 'my-chart_nc.json' to avoid collision
-WARNING: duplicate component name 'my-chart' — using filename 'my-chart_qubership.json' to avoid collision
+WARNING: duplicate component name 'my-chart' — using filename 'my-chart_vnd_nc_helm_chart.json' to avoid collision
+WARNING: duplicate component name 'my-chart' — using filename 'my-chart_vnd_qubership_helm_chart.json' to avoid collision
 ```
 
 The collision warning is printed for **every** duplicate, including the first one.
 Exit code remains 0.
 
-**Note on vendor extraction edge case:**
+**Edge case:**
 
-If the mime-type does not match the expected pattern `application/vnd.{vendor}.*`,
-the vendor falls back to `"unknown"`, producing `{name}_unknown.json`.
+If the mime-type contains no `/`, the suffix falls back to `"unknown"`, producing `{name}_unknown.json`.
 
 ---
 
@@ -444,7 +439,7 @@ directly, so it never produces this warning.
 | Warning                                                                  | Command    | Cause                                                  | Effect                                   |
 | ------------------------------------------------------------------------ | ---------- | ------------------------------------------------------ | ---------------------------------------- |
 | `component '{name}' ({mime-type}) not found in mini-manifests — skipped` | `generate` | Component in config has no matching mini-manifest      | Component skipped; exit code 0           |
-| `duplicate component name '{name}' — using filename '{file}'`            | `fetch`    | Two config entries share the same name                 | Vendor-suffix filename used; exit code 0 |
+| `duplicate component name '{name}' — using filename '{file}'`            | `fetch`    | Two config entries share the same name                 | Mime-type suffix filename used; exit code 0 |
 | `Multiple .tgz files found after helm pull, using first: ...`            | `fetch`    | `helm pull` wrote more than one `.tgz` to the temp dir | First file (sorted) is used; exit code 0 |
 | `no group for component '{name}' (reference '...' has no namespace/org)` | `fetch`    | Docker reference has no org, e.g. `docker.io/envoy:v1` | `group` absent in mini-manifest; exit code 0 |
 

@@ -135,8 +135,8 @@ def fetch(config, out, registry_def):
         for name, bom in results:
             if name_counts[name] > 1:
                 mime = bom.components[0].mime_type if bom.components else ""
-                vendor = mime.split("/")[1].split(".")[1] if "/" in mime else "unknown"
-                out_file = out_dir / f"{name}_{vendor}.json"
+                suffix = mime.split("/")[1].replace(".", "_") if "/" in mime else "unknown"
+                out_file = out_dir / f"{name}_{suffix}.json"
                 click.echo(
                     f"WARNING: duplicate component name '{name}' — "
                     f"using filename '{out_file.name}' to avoid collision",
