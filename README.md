@@ -1,4 +1,4 @@
-# am — Application Manifest CLI
+# Application Manifest CLI (am)
 
 `am` is a CLI tool that generates an **Application Manifest** in three steps:
 component mini-manifests → Helm chart mini-manifests → final Application Manifest.
