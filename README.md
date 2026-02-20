@@ -30,7 +30,7 @@ You need two input files that you maintain yourself:
 
 - **`build-config.yaml`** — lists all components of your application (Docker images, Helm charts),
   their types, OCI references, and dependencies. You write this once per application.
-  See [docs/usage.md](docs/usage.md) for the format, field reference, and annotated example.
+  See [docs/configuration.md](docs/configuration.md) for the format, field reference, and annotated example.
 
 - **CI metadata JSON** — produced by your CI system after building each image: contains
   the image name, version, SHA-256 hash, and registry reference. One file per CI-built image.
@@ -56,21 +56,21 @@ that are combined in the final step into the Application Manifest.
 **Step 1** — for each image built in your CI pipeline, convert the CI-produced
 metadata JSON into a mini-manifest (hash taken from CI):
 
-```sh
+```bash
 am component -i ci/jaeger-meta.json -o minis/jaeger.json
 ```
 
 **Step 2** — for Helm charts and third-party Docker images referenced by URL
 (not built in CI), fetch and produce mini-manifests automatically:
 
-```sh
+```bash
 am fetch -c build-config.yaml -o minis/
 ```
 
 **Step 3** — read all mini-manifests and the build config, match by component
 identity `(name, mimeType)`, and assemble the final manifest:
 
-```sh
+```bash
 am generate -c build-config.yaml -o manifest.json --validate minis/
 ```
 
@@ -85,7 +85,7 @@ For a complete worked example see [docs/examples.md](docs/examples.md).
 
 | Document                                               | Description                                                         |
 | ------------------------------------------------------ | ------------------------------------------------------------------- |
-| [docs/usage.md](docs/usage.md)                         | **Build config format** — workflow, fields, component types, registry definition |
+| [docs/configuration.md](docs/configuration.md)                         | **Build config format** — workflow, fields, component types, registry definition |
 | [docs/commands.md](docs/commands.md)                   | Full reference for all four commands and their options              |
 | [docs/mini-manifests.md](docs/mini-manifests.md)       | Mini-manifest format, file naming rules, collision handling         |
 | [docs/manifest-assembly.md](docs/manifest-assembly.md) | How `generate` assembles the final manifest                         |
@@ -98,30 +98,13 @@ For a complete worked example see [docs/examples.md](docs/examples.md).
 ## Installation
 
 ```bash
-git clone https://github.com/nookyo/app-manifest.git
+git clone https://github.com/netcracker/app-manifest.git
 cd app-manifest
 pip install -e .
 am --help
 ```
 
 Requires **Python 3.12+** and [`helm` CLI](https://helm.sh/docs/intro/install/) (for the `fetch` command).
-
----
-
-## Quick start
-
-```bash
-# Step 1 — CI-built images: convert CI metadata to mini-manifests
-# ci/jaeger-meta.json is written by your CI system after the image is built and pushed
-am c -i ci/jaeger-meta.json -o minis/jaeger.json
-
-# Step 2 — Helm charts and referenced images: fetch and produce mini-manifests
-# build-config.yaml is your application component definition (see docs/usage.md)
-am f -c build-config.yaml -o minis/
-
-# Step 3 — Assemble the final Application Manifest from all mini-manifests
-am gen -c build-config.yaml -o manifest.json --validate minis/
-```
 
 ---
 

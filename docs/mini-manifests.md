@@ -411,6 +411,27 @@ Loading order determines which file wins:
 - Within a directory: alphabetical order (e.g., `a.json` before `b.json`).
 - Across multiple arguments: left-to-right order on the command line.
 
+**How to detect duplicates before running `generate`:**
+
+```bash
+# List (name, mime-type) pairs from all mini-manifests and find duplicates
+python -c "
+import json, sys, pathlib
+pairs = []
+for f in pathlib.Path('minis').glob('*.json'):
+    c = json.loads(f.read_text())['components'][0]
+    pairs.append((c['name'], c.get('mime-type', ''), str(f)))
+seen = {}
+for name, mime, path in pairs:
+    key = (name, mime)
+    if key in seen:
+        print(f'DUPLICATE: {name} ({mime})')
+        print(f'  first:  {seen[key]}')
+        print(f'  second: {path}')
+    seen[key] = path
+"
+```
+
 To avoid this problem, do not place two files describing the same component in the
 same input set. If you intentionally want to override a component, place the preferred
 file later in the argument list (or give it a lexicographically later filename in the directory).

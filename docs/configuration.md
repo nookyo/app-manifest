@@ -1,47 +1,24 @@
-# Build Config & Workflow
+# Build Config Reference
 
 The **build config** (`build-config.yaml`) is the main input file you write and maintain.
 It tells `am` what components make up your application, their types, where to find them,
 and how they depend on each other.
 
-This document covers: command aliases, the three-step workflow, build config format,
-component types, registry definition, and exit codes.
+This document covers: build config format, component types, and registry definition.
+
+For the three-step pipeline overview see [README — How it works](../README.md#how-it-works).
+For all command options and flags see [commands.md](commands.md).
 
 ## Command Aliases
 
 Each command has a short alias:
 
-| Command     | Alias |
-| ----------- | ----- |
-| `component` | `c`   |
-| `fetch`     | `f`   |
-| `generate`  | `gen` |
-| `validate`  | `v`   |
-
----
-
-## Workflow
-
-The pipeline consists of three sequential steps:
-
-```
-CI/CD pipeline
-│
-├── 1. component   ─── CI metadata JSON ──────────────> mini-manifest JSON
-├── 2. fetch       ─── Helm OCI registry ─────────────> mini-manifest JSON
-│                       (runs helm pull, extracts Chart.yaml)
-│
-└── 3. generate    ─── mini-manifests + build config ─> Application Manifest JSON
-```
-
-**Step 1 — `component`**: for each Docker image (and Helm chart whose metadata
-comes from CI), convert a CI-produced metadata JSON into a CycloneDX mini-manifest.
-
-**Step 2 — `fetch`**: for Helm charts that must be downloaded at manifest-build time,
-run `helm pull` automatically, extract chart metadata, and produce mini-manifests.
-
-**Step 3 — `generate`**: combine all mini-manifests with the build config YAML
-into the final Application Manifest.
+| Command     | Alias | Description                                     |
+| ----------- | ----- | ----------------------------------------------- |
+| `component` | `c`   | CI metadata JSON to mini-manifest               |
+| `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest  |
+| `generate`  | `gen` | Mini-manifests + build config to final manifest |
+| `validate`  | `v`   | Validate manifest against JSON Schema           |
 
 ---
 
@@ -169,11 +146,3 @@ With registry definition (`name: qubership`):
 pkg:docker/core/jaeger@1.0?registry_name=qubership
 ```
 
----
-
-## Exit Codes
-
-| Code | Situation                                                                     |
-| ---- | ----------------------------------------------------------------------------- |
-| 0    | Success (warnings printed to stderr do not affect exit code)                  |
-| 1    | Any error: bad config, bad JSON, helm pull failure, schema validation failure |
