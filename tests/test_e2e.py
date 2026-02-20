@@ -586,7 +586,7 @@ class TestJaegerFullPipeline:
         jaeger-es-index-cleaner, jaeger-es-rollover, envoy, openjdk
 
     Финальный манифест содержит 13 компонентов:
-        cassandra (standalone) + qubership-jaeger (helm) + 11 docker = 13
+        qubership-jaeger (standalone) + qubership-jaeger (helm) + 11 docker = 13
 
     В конце запускается --validate.
     """
@@ -652,7 +652,7 @@ class TestJaegerFullPipeline:
         self._build_manifest(tmp_path)  # assert внутри _build_manifest
 
     def test_component_count(self, tmp_path):
-        """cassandra(standalone) + qubership-jaeger(helm) + 11 docker = 13."""
+        """qubership-jaeger(standalone) + qubership-jaeger(helm) + 11 docker = 13."""
         data = self._build_manifest(tmp_path)
         assert len(data["components"]) == 13
 
@@ -661,7 +661,6 @@ class TestJaegerFullPipeline:
         names = {c["name"] for c in data["components"]}
 
         expected = {
-            "cassandra",
             "qubership-jaeger",
             "jaeger-cassandra-schema",
             "jaeger",
@@ -750,7 +749,7 @@ class TestJaegerFullPipeline:
         assert len(helm_deps["dependsOn"]) == 11
 
     def test_standalone_depends_on_helm(self, tmp_path):
-        """cassandra standalone-runnable зависит от qubership-jaeger helm."""
+        """qubership-jaeger standalone-runnable зависит от qubership-jaeger helm."""
         data = self._build_manifest(tmp_path)
         standalone = next(
             c for c in data["components"]

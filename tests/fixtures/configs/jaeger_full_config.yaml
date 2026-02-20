@@ -2,7 +2,7 @@ applicationVersion: "1.2.3"
 applicationName: "jaeger"
 components:
 
-  - name: cassandra
+  - name: qubership-jaeger
     mimeType: application/vnd.nc.standalone-runnable
     dependsOn:
       - name: qubership-jaeger

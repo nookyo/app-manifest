@@ -50,6 +50,10 @@ Building a manifest is a **three-step pipeline**. You need two input files:
   `docker push`. Contains name, version, SHA-256 hash, and registry address.
   See [Input format](docs/commands.md#input-format) for the exact format your CI must produce.
 
+Each command produces or consumes a **mini-manifest** — a small intermediate CycloneDX BOM
+for exactly one component. Mini-manifests are not the final output; they are consumed by
+`am generate` to build the Application Manifest.
+
 ```
   Your inputs                  am commands                     Output
   ──────────                   ───────────                     ──────
@@ -88,9 +92,6 @@ am generate -c build-config.yaml -o manifest.json --validate minis/
 
 > Steps 1 and 2 are independent and can run in parallel.
 > Step 3 requires both to complete.
-
-A **mini-manifest** is an intermediate file for exactly one component —
-consumed by `am generate`, not used directly.
 
 For a complete worked example see [Examples](docs/examples.md).
 

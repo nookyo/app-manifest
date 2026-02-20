@@ -10,7 +10,7 @@ All files referenced here are part of the repository under `tests/fixtures/`.
 
 Jaeger consists of:
 
-- One **standalone-runnable** (`cassandra`) — the deployment entry point
+- One **standalone-runnable** (`qubership-jaeger`) — the deployment entry point
 - One **Helm chart** (`qubership-jaeger`) — fetched from an OCI registry
 - **11 Docker images** — split into two groups by their source:
   - 7 images referenced in the config — `fetch` builds their mini-manifests
@@ -29,7 +29,7 @@ applicationVersion: "1.2.3"
 applicationName: "jaeger"
 components:
 
-  - name: cassandra
+  - name: qubership-jaeger
     mimeType: application/vnd.nc.standalone-runnable
     dependsOn:
       - name: qubership-jaeger
@@ -152,7 +152,7 @@ Output: `manifest.json` validated against the JSON Schema.
 
 ```
 components (13 total):
-  cassandra                              standalone-runnable  (no hash)
+  qubership-jaeger                       standalone-runnable  (no hash)
   qubership-jaeger                       helm.chart           SHA-256 ✓
   jaeger-cassandra-schema                docker.image         (no hash — from reference)
   jaeger                                 docker.image         (no hash — from reference)
@@ -167,7 +167,7 @@ components (13 total):
   qubership-deployment-status-provisioner docker.image        SHA-256 ✓ (from CI)
 
 dependencies (3 entries):
-  cassandra              -> [qubership-jaeger]
+  qubership-jaeger (standalone) -> [qubership-jaeger (helm)]
   qubership-jaeger       -> [jaeger-cassandra-schema, jaeger, jaeger-readiness-probe,
                              example-hotrod, jaeger-integration-tests,
                              jaeger-es-index-cleaner, jaeger-es-rollover,
@@ -182,10 +182,10 @@ dependencies (3 entries):
 {
   "components": [
     {
-      "bom-ref": "cassandra:...",
+      "bom-ref": "qubership-jaeger:...",
       "type": "application",
       "mime-type": "application/vnd.nc.standalone-runnable",
-      "name": "cassandra",
+      "name": "qubership-jaeger",
       "version": "1.2.3"
     },
     {

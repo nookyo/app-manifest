@@ -35,7 +35,7 @@ A full real-world example is available at
 | `mimeType`         | yes      | Component type — see [Component types](#component-types)                                                                                    |
 | `reference`        | no       | OCI URL of the image or chart. Required by `fetch` for Helm charts. For Docker images, used to generate a mini-manifest without downloading. |
 | `dependsOn[]`      | no       | Components this component depends on. Used by `generate` to build `dependencies[]` in the final manifest.                                   |
-| `valuesPathPrefix` | no       | Path in `values.yaml` where this Docker image's tag is configured (e.g. `images.jaeger`). Used only inside `dependsOn` entries.             |
+| `valuesPathPrefix` | no       | Path in `values.yaml` where this Docker image's tag is configured (e.g. `images.jaeger`). **Only valid inside `dependsOn` entries**, not at the component level. |
 
 ### Component identity
 

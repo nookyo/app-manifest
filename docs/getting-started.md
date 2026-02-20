@@ -19,7 +19,7 @@ Before you begin, make sure you have:
 
 ---
 
-## Step 0: Understand what you need to prepare
+## What you need to prepare
 
 `am` requires two types of input:
 
@@ -37,6 +37,10 @@ information that only becomes known after the build.
 
 If a component is not built in CI (e.g. a third-party chart from a public registry),
 you do not need a CI metadata JSON for it — `am fetch` handles it automatically.
+
+> **No Helm charts?** If your application uses only Docker images (no Helm charts),
+> you can skip Step 4 (`am fetch`) entirely — it only applies to components with a
+> `reference` field. Run Steps 3 and 5 only.
 
 ---
 
