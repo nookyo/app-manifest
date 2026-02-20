@@ -99,15 +99,16 @@ For a complete worked example see [docs/examples.md](docs/examples.md).
 
 ## Documentation
 
-| Document                                               | Description                                                                      |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| [docs/examples.md](docs/examples.md)                   | **Start here** — complete Jaeger walkthrough: config, CI metadata, commands, output |
-| [docs/configuration.md](docs/configuration.md)         | `build-config.yaml` format: fields, component types, registry definition         |
-| [docs/commands.md](docs/commands.md)                   | Full reference for all four `am` commands and their options                      |
-| [docs/mini-manifests.md](docs/mini-manifests.md)       | Mini-manifest format, naming rules, collision handling                           |
-| [docs/manifest-assembly.md](docs/manifest-assembly.md) | How `generate` builds the final manifest (detailed algorithm)                    |
-| [docs/architecture.md](docs/architecture.md)           | High-level architecture and data flow                                            |
-| [docs/design-decisions.md](docs/design-decisions.md)   | Motivation for key design choices                                                |
+| Document                                                   | Description                                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [docs/getting-started.md](docs/getting-started.md)         | **Start here** — step-by-step guide from zero to a ready manifest                |
+| [docs/configuration.md](docs/configuration.md)             | `build-config.yaml` format: fields, component types, registry definition         |
+| [docs/commands.md](docs/commands.md)                       | Full reference for all four `am` commands and their options                      |
+| [docs/examples.md](docs/examples.md)                       | Complete Jaeger example: config, CI metadata, pipeline commands, output          |
+| [docs/mini-manifests.md](docs/mini-manifests.md)           | Mini-manifest format, naming rules, collision handling                           |
+| [docs/manifest-assembly.md](docs/manifest-assembly.md)     | How `generate` builds the final manifest (detailed algorithm)                    |
+| [docs/architecture.md](docs/architecture.md)               | High-level architecture and data flow                                            |
+| [docs/design-decisions.md](docs/design-decisions.md)       | Motivation for key design choices                                                |
 
 ---
 
