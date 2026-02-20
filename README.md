@@ -109,7 +109,7 @@ For a complete worked example see [Examples](docs/examples.md).
 ---
 
 ## Documentation
-
+| Reference                                           | Description                                                              |
 | --------------------------------------------------- | ------------------------------------------------------------------------ |
 | [**Getting Started**](docs/getting-started.md)      | **Start here** — step-by-step guide from zero to a ready manifest        |
 | [**Build Config Reference**](docs/configuration.md) | `build-config.yaml` format: fields, component types, registry definition |
