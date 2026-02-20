@@ -9,17 +9,6 @@ This document covers: build config format, component types, and registry definit
 For the three-step pipeline overview see [README — How it works](../README.md#how-it-works).
 For all command options and flags see [commands.md](commands.md).
 
-## Command Aliases
-
-Each command has a short alias:
-
-| Command     | Alias | Description                                     |
-| ----------- | ----- | ----------------------------------------------- |
-| `component` | `c`   | CI metadata JSON to mini-manifest               |
-| `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest  |
-| `generate`  | `gen` | Mini-manifests + build config to final manifest |
-| `validate`  | `v`   | Validate manifest against JSON Schema           |
-
 ---
 
 ## Build Config YAML

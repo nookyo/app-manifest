@@ -2,7 +2,12 @@
 
 Full reference for all four `am` commands.
 
-Each command has a short alias: `c` = `component`, `f` = `fetch`, `gen` = `generate`, `v` = `validate`.
+| Command     | Alias | Description                                     |
+| ----------- | ----- | ----------------------------------------------- |
+| `component` | `c`   | CI metadata JSON to mini-manifest               |
+| `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest  |
+| `generate`  | `gen` | Mini-manifests + build config to final manifest |
+| `validate`  | `v`   | Validate manifest against JSON Schema           |
 
 ---
 
