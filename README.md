@@ -23,31 +23,32 @@ With a manifest you can:
 
 ---
 
-## Before you start
+## Installation
 
-To build a manifest you need two things:
+```bash
+git clone https://github.com/netcracker/app-manifest.git
+cd app-manifest
+pip install -e .
+am --help
+```
 
-**1. `build-config.yaml`** — a file you write once per application.
-It lists all components: Docker images, Helm charts, their types, registry references,
-and how they depend on each other.
-
-See the [Build Config Reference](docs/configuration.md) for the format and field reference.
-
-**2. CI metadata JSON** — one JSON file per image or chart built in your CI pipeline.
-Your CI system writes this file after a successful build and push.
-It contains the component name, version, SHA-256 hash, and registry address.
-
-See [Input format](docs/commands.md#input-format) in the Commands Reference for the exact JSON format
-your CI must produce.
-
-> If a component is not built in CI (e.g. a third-party Helm chart fetched from a registry),
-> you do not need a CI metadata JSON for it — `am fetch` handles those automatically.
+Requires [Python 3.12+](https://www.python.org/), [Pydantic v2](https://docs.pydantic.dev/latest/),
+[Click](https://click.palletsprojects.com/), and the [Helm CLI](https://helm.sh/docs/intro/install/)
+(for the `fetch` command only).
 
 ---
 
 ## How it works
 
-Building a manifest is a **three-step pipeline**:
+Building a manifest is a **three-step pipeline**. You need two input files:
+
+- **`build-config.yaml`** — a file you write once per application. Lists all components,
+  their types, registry references, and dependencies.
+  See the [Build Config Reference](docs/configuration.md) for the format.
+
+- **CI metadata JSON** — one file per image built in CI, written by your pipeline after
+  `docker push`. Contains name, version, SHA-256 hash, and registry address.
+  See [Input format](docs/commands.md#input-format) for the exact format your CI must produce.
 
 ```
   Your inputs                  am commands                     Output
@@ -64,24 +65,22 @@ Building a manifest is a **three-step pipeline**:
 ```
 
 **Step 1 — `am component`**
-For each image or chart built in your CI pipeline, convert the CI-produced metadata JSON
-into a mini-manifest (hash is taken from CI):
+For each image built in CI, convert the metadata JSON into a mini-manifest:
 
 ```bash
 am component -i ci/jaeger-meta.json -o minis/jaeger.json
 ```
 
 **Step 2 — `am fetch`**
-For Helm charts and third-party images that are not built in CI (referenced by URL only),
-download charts via `helm pull` and produce mini-manifests automatically:
+For Helm charts and third-party images referenced by URL (not built in CI),
+download and produce mini-manifests automatically:
 
 ```bash
 am fetch -c build-config.yaml -o minis/
 ```
 
 **Step 3 — `am generate`**
-Read all mini-manifests and the build config, match components by identity, and assemble
-the final Application Manifest:
+Assemble the final manifest from all mini-manifests and the build config:
 
 ```bash
 am generate -c build-config.yaml -o manifest.json --validate minis/
@@ -90,40 +89,10 @@ am generate -c build-config.yaml -o manifest.json --validate minis/
 > Steps 1 and 2 are independent and can run in parallel.
 > Step 3 requires both to complete.
 
-A **mini-manifest** is an intermediate file that describes exactly one component.
-You never use mini-manifests directly — they are consumed by `am generate`.
+A **mini-manifest** is an intermediate file for exactly one component —
+consumed by `am generate`, not used directly.
 
-For a complete worked example see the [Examples](docs/examples.md).
-
----
-
-## Documentation
-
-| | |
-| --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [**Getting Started**](docs/getting-started.md)     | **Start here** — step-by-step guide from zero to a ready manifest                |
-| [**Build Config Reference**](docs/configuration.md) | `build-config.yaml` format: fields, component types, registry definition        |
-| [**Commands Reference**](docs/commands.md)          | Full reference for all four `am` commands and their options                      |
-| [**Examples**](docs/examples.md)                    | Complete Jaeger example: config, CI metadata, pipeline commands, output          |
-| [**Mini-manifests**](docs/mini-manifests.md)        | Mini-manifest format, naming rules, collision handling                           |
-| [**Manifest Assembly**](docs/manifest-assembly.md)  | How `generate` builds the final manifest (detailed algorithm)                    |
-| [**Architecture**](docs/architecture.md)            | High-level architecture and data flow                                            |
-| [**Design Decisions**](docs/design-decisions.md)    | Motivation for key design choices                                                |
-
----
-
-## Installation
-
-```bash
-git clone https://github.com/netcracker/app-manifest.git
-cd app-manifest
-pip install -e .
-am --help
-```
-
-Requires [Python 3.12+](https://www.python.org/), [Pydantic v2](https://docs.pydantic.dev/latest/),
-[Click](https://click.palletsprojects.com/), and the [Helm CLI](https://helm.sh/docs/intro/install/)
-(for the `fetch` command only).
+For a complete worked example see [Examples](docs/examples.md).
 
 ---
 
@@ -135,6 +104,21 @@ Requires [Python 3.12+](https://www.python.org/), [Pydantic v2](https://docs.pyd
 | `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest  |
 | `generate`  | `gen` | Mini-manifests + build config to final manifest |
 | `validate`  | `v`   | Validate manifest against JSON Schema           |
+
+---
+
+## Documentation
+
+| | |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [**Getting Started**](docs/getting-started.md)       | **Start here** — step-by-step guide from zero to a ready manifest                |
+| [**Build Config Reference**](docs/configuration.md)  | `build-config.yaml` format: fields, component types, registry definition         |
+| [**Commands Reference**](docs/commands.md)           | Full reference for all four `am` commands and their options                      |
+| [**Examples**](docs/examples.md)                     | Complete Jaeger example: config, CI metadata, pipeline commands, output          |
+| [**Mini-manifests**](docs/mini-manifests.md)         | Mini-manifest format, naming rules, collision handling                           |
+| [**Manifest Assembly**](docs/manifest-assembly.md)   | How `generate` builds the final manifest (detailed algorithm)                    |
+| [**Architecture**](docs/architecture.md)             | High-level architecture and data flow                                            |
+| [**Design Decisions**](docs/design-decisions.md)     | Motivation for key design choices                                                |
 
 ---
 
