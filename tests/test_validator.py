@@ -1,4 +1,4 @@
-"""Тесты для --validate флага и сервиса validator."""
+"""Tests for the --validate flag and the validator service."""
 
 import json
 from pathlib import Path
@@ -13,12 +13,12 @@ from app_manifest.services.validator import validate_manifest
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-# ─── Тесты сервиса validate_manifest ──────────────────────────
+# ─── Tests for the validate_manifest service ─────────────────────
 
 
 class TestValidateManifest:
     def _minimal_valid(self) -> dict:
-        """Минимально валидный манифест."""
+        """Minimal valid manifest."""
         return {
             "$schema": "../schemas/application-manifest.schema.json",
             "bomFormat": "CycloneDX",
@@ -110,7 +110,7 @@ class TestValidateManifest:
         assert errors == []
 
     def test_example_jaeger_manifest_is_valid(self):
-        """Наш эталонный пример должен проходить валидацию."""
+        """The reference Jaeger example must pass validation."""
         example = FIXTURES / "examples/jaeger_manifest.json"
         if not example.exists():
             pytest.skip("example_jaeger_manifest.json not generated yet")
@@ -119,11 +119,11 @@ class TestValidateManifest:
         assert errors == [], f"Validation errors: {errors}"
 
 
-# ─── Тесты CLI --validate ──────────────────────────────────────
+# ─── Tests for the --validate CLI flag ────────────────────────────
 
 
 def _fake_helm_run(cmd, **kwargs):
-    """Мок subprocess.run для helm pull."""
+    """Mock subprocess.run for helm pull."""
     import io, tarfile, yaml
     dest = Path(cmd[cmd.index("--destination") + 1])
     ref = next(a for a in cmd if a.startswith("oci://"))
@@ -156,7 +156,7 @@ class TestValidateCLIFlag:
         assert "--validate" in result.output
 
     def test_generate_without_validate_flag(self, tmp_path):
-        """Без --validate файл создаётся, сообщение о валидации отсутствует."""
+        """Without --validate, the file is created and no validation message is shown."""
         out_file = tmp_path / "manifest.json"
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -168,12 +168,12 @@ class TestValidateCLIFlag:
         assert "Manifest is valid." not in result.output
 
     def test_generate_with_validate_passes(self, tmp_path):
-        """С --validate валидный манифест → 'Manifest is valid.'"""
+        """With --validate, a valid manifest → 'Manifest is valid.'"""
         minis_dir = tmp_path / "minis"
         minis_dir.mkdir()
         runner = CliRunner()
 
-        # Создаём мини-манифесты для docker-образов
+        # Build mini-manifests for docker images
         for meta_file in [FIXTURES / "metadata/docker_metadata.json", FIXTURES / "metadata/envoy_metadata.json"]:
             out = minis_dir / f"mini_{meta_file.stem}.json"
             runner.invoke(cli, ["component", "-i", str(meta_file), "-o", str(out)])
@@ -198,13 +198,13 @@ class TestValidateCLIFlag:
         assert "Manifest is valid." in result.output
 
     def test_generate_with_validate_fails_on_bad_manifest(self, tmp_path):
-        """Если после записи манифест невалиден — exit code != 0."""
+        """If the manifest is invalid after writing — exit code != 0."""
         out_file = tmp_path / "manifest.json"
 
-        # Записываем заведомо невалидный JSON
+        # Write a deliberately invalid JSON
         out_file.write_text('{"bomFormat": "WRONG"}', encoding="utf-8")
 
-        # Патчим _write_output чтобы он не перезаписал наш файл
+        # Patch _write_output so it does not overwrite our file
         with patch("app_manifest.cli.validate_manifest") as mock_validate:
             mock_validate.return_value = ["root: 'bomFormat' is not valid"]
 
@@ -220,7 +220,7 @@ class TestValidateCLIFlag:
         assert "Validation FAILED" in result.output or "does not conform" in result.output
 
 
-# ─── Тесты команды validate ────────────────────────────────────
+# ─── Tests for the validate command ─────────────────────────────
 
 
 class TestValidateCommand:
@@ -230,7 +230,7 @@ class TestValidateCommand:
         assert "validate" in result.output
 
     def test_validate_valid_manifest(self, tmp_path):
-        """Валидный манифест → exit code 0 и сообщение 'is valid'."""
+        """Valid manifest → exit code 0 and 'is valid' message."""
         manifest = {
             "$schema": "../schemas/application-manifest.schema.json",
             "bomFormat": "CycloneDX",
@@ -265,7 +265,7 @@ class TestValidateCommand:
         assert "is valid" in result.output
 
     def test_validate_invalid_manifest(self, tmp_path):
-        """Невалидный манифест → exit code != 0 и сообщение 'FAILED'."""
+        """Invalid manifest → exit code != 0 and 'FAILED' message."""
         manifest_file = tmp_path / "manifest.json"
         manifest_file.write_text('{"bomFormat": "WRONG"}', encoding="utf-8")
 
@@ -276,7 +276,7 @@ class TestValidateCommand:
         assert "FAILED" in result.output or "does not conform" in result.output
 
     def test_validate_invalid_json(self, tmp_path):
-        """Невалидный JSON → exit code != 0."""
+        """Invalid JSON → exit code != 0."""
         manifest_file = tmp_path / "manifest.json"
         manifest_file.write_text("{not valid json", encoding="utf-8")
 
@@ -286,7 +286,7 @@ class TestValidateCommand:
         assert result.exit_code != 0
 
     def test_validate_example_jaeger_manifest(self):
-        """Эталонный пример jaeger должен проходить валидацию."""
+        """The reference Jaeger example must pass validation."""
         example = FIXTURES / "examples/jaeger_manifest.json"
         if not example.exists():
             pytest.skip("example_jaeger_manifest.json not generated yet")

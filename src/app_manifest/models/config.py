@@ -1,8 +1,8 @@
-"""Модели для YAML build-конфига.
+"""Pydantic models for the YAML build config.
 
-Этот файл описывает структуру YAML-файла, который пользователь
-передаёт через --config. Pydantic автоматически проверяет что
-все обязательные поля на месте и типы правильные.
+This file describes the structure of the YAML file that the user
+passes via --config. Pydantic validates that
+all required fields are present and types are correct.
 """
 
 from enum import Enum
@@ -11,14 +11,14 @@ from pydantic import BaseModel, Field
 
 
 class MimeType(str, Enum):
-    """Допустимые типы компонентов.
+    """Allowed component types.
 
-    str + Enum — значит каждый элемент это строка,
-    но только из разрешённого списка. Если в YAML написать
-    mimeType: "что-то-левое" — Pydantic выдаст ошибку.
+    str + Enum — each value is a string
+    but restricted to the declared set. If YAML contains
+    mimeType: "invalid-type" — Pydantic will raise an error.
     """
 
-    # nc-вариант (из спецификации)
+    # nc-variant (from the spec)
     STANDALONE_RUNNABLE = "application/vnd.nc.standalone-runnable"
     DOCKER_IMAGE = "application/vnd.docker.image"
     HELM_CHART = "application/vnd.nc.helm.chart"
@@ -28,7 +28,7 @@ class MimeType(str, Enum):
     CRD = "application/vnd.nc.crd"
     JOB = "application/vnd.nc.job"
 
-    # qubership-вариант (из реальных примеров)
+    # qubership-variant (from real-world usage)
     Q_STANDALONE_RUNNABLE = "application/vnd.qubership.standalone-runnable"
     Q_HELM_CHART = "application/vnd.qubership.helm.chart"
     Q_SMARTPLUG = "application/vnd.qubership.smartplug"
@@ -39,9 +39,9 @@ class MimeType(str, Enum):
 
 
 class DependencyConfig(BaseModel):
-    """Одна зависимость компонента.
+    """A single component dependency.
 
-    Пример в YAML:
+    Example in YAML:
         dependsOn:
           - name: jaeger
             mimeType: application/vnd.docker.image
@@ -52,15 +52,15 @@ class DependencyConfig(BaseModel):
     mime_type: MimeType = Field(alias="mimeType")
     values_path_prefix: str | None = Field(default=None, alias="valuesPathPrefix")
 
-    # populate_by_name=True — разрешает использовать и Python-имя (mime_type),
-    # и YAML-имя (mimeType). Нужно для удобства в тестах.
+    # populate_by_name=True — allows both the Python name (mime_type)
+    # and the YAML alias (mimeType). Needed for convenience in tests.
     model_config = {"populate_by_name": True}
 
 
 class ComponentConfig(BaseModel):
-    """Один компонент в конфиге.
+    """A single component entry in the config.
 
-    Пример в YAML:
+    Example in YAML:
         components:
           - name: qubership-jaeger
             mimeType: application/vnd.nc.helm.chart
@@ -79,9 +79,9 @@ class ComponentConfig(BaseModel):
 
 
 class BuildConfig(BaseModel):
-    """Корневая модель YAML build-конфига.
+    """Root model for the YAML build config.
 
-    Пример YAML-файла целиком:
+    Example YAML file:
         applicationVersion: "1.2.3"
         applicationName: "my-app"
         components:

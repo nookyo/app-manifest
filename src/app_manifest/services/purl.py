@@ -1,9 +1,9 @@
-"""Генератор Package URL (PURL).
+"""Package URL (PURL) generator.
 
-Преобразует reference артефакта в стандартный PURL,
-используя Registry Definition для определения registry_name.
+Converts an artifact reference into a standard PURL,
+using a Registry Definition to resolve the registry_name.
 
-Примеры:
+Examples:
   Docker:
     reference: "ghcr.io/netcracker/jaeger:1.0"
     regdef name: "qubership" (groupUri: "ghcr.io")
@@ -14,7 +14,7 @@
     regdef name: "qubership" (repositoryDomainName: "oci://registry.qubership.org")
     → "pkg:helm/charts/my-chart@1.0?registry_name=qubership"
 
-  Docker без regdef:
+  Docker without regdef:
     reference: "docker.io/envoyproxy/envoy:v1.32.6"
     → "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
 """
@@ -23,11 +23,11 @@ from app_manifest.models.regdef import RegistryDefinition
 
 
 def parse_docker_reference(reference: str) -> tuple[str, str, str]:
-    """Разобрать Docker reference на компоненты.
+    """Parse a Docker reference into its components.
 
-    Возвращает (name, version, namespace/group).
+    Returns (name, version, namespace/group).
 
-    Примеры:
+    Examples:
         "docker.io/envoyproxy/envoy:v1.32.6" → ("envoy", "v1.32.6", "envoyproxy")
         "ghcr.io/netcracker/jaeger:1.0"      → ("jaeger", "1.0", "netcracker")
         "sandbox.example.com/core/svc:2.0"  → ("svc", "2.0", "core")
@@ -41,10 +41,10 @@ def make_docker_purl(
     reference: str,
     regdef: RegistryDefinition | None = None,
 ) -> str:
-    """Создать PURL для Docker-образа из reference.
+    """Create a PURL for a Docker image from a reference.
 
-    reference — например "ghcr.io/netcracker/jaeger:1.0"
-    regdef — Registry Definition для определения registry_name
+    reference — e.g. "ghcr.io/netcracker/jaeger:1.0"
+    regdef — Registry Definition for resolving registry_name
     """
     registry, namespace, name, version = _parse_docker_ref_parts(reference)
 
@@ -53,7 +53,7 @@ def make_docker_purl(
     if not registry:
         raise ValueError(f"Invalid Docker reference: cannot determine registry from '{reference}'")
 
-    # Определяем registry_name из Registry Definition
+    # Resolve registry_name from the Registry Definition
     registry_name = _resolve_registry_name(registry, "docker", regdef, namespace)
 
     if namespace:
@@ -63,12 +63,12 @@ def make_docker_purl(
 
 
 def _parse_docker_ref_parts(reference: str) -> tuple[str, str, str, str]:
-    """Разобрать Docker reference на (registry, namespace, name, version)."""
+    """Parse a Docker reference into (registry, namespace, name, version)."""
     ref = reference
     if ref.startswith("docker://"):
         ref = ref[len("docker://"):]
 
-    # Формат: REGISTRY_HOST[:PORT]/NAMESPACE/IMAGE:TAG
+    # Format: REGISTRY_HOST[:PORT]/NAMESPACE/IMAGE:TAG
     parts = ref.split("/")
 
     if len(parts) >= 3:
@@ -104,13 +104,13 @@ def make_helm_purl(
     reference: str,
     regdef: RegistryDefinition | None = None,
 ) -> str:
-    """Создать PURL для Helm-чарта из reference.
+    """Create a PURL for a Helm chart from a reference.
 
-    reference — например "oci://registry.example.com/charts/my-chart:1.0"
+    reference — e.g. "oci://registry.example.com/charts/my-chart:1.0"
     """
     ref = reference
 
-    # Убираем протокол
+    # Strip the protocol prefix
     if ref.startswith("oci://"):
         ref = ref[len("oci://"):]
     elif ref.startswith("https://"):
@@ -118,7 +118,7 @@ def make_helm_purl(
     elif ref.startswith("http://"):
         ref = ref[len("http://"):]
 
-    # Разделяем на registry/namespace/name:version
+    # Split into registry/namespace/name:version
     parts = ref.split("/")
 
     if len(parts) >= 3:
@@ -134,7 +134,7 @@ def make_helm_purl(
         name_tag = parts[0]
         namespace = ""
 
-    # Разделяем имя и версию
+    # Split name and version
     if ":" in name_tag:
         name, version = name_tag.rsplit(":", 1)
     else:
@@ -148,7 +148,7 @@ def make_helm_purl(
     if not registry:
         raise ValueError(f"Invalid Helm reference: cannot determine registry from '{reference}'")
 
-    # Определяем registry_name
+    # Resolve registry_name
     registry_name = _resolve_registry_name(registry, "helm", regdef)
 
     if namespace:
@@ -163,12 +163,12 @@ def _resolve_registry_name(
     regdef: RegistryDefinition | None,
     namespace: str = "",
 ) -> str:
-    """Найти registry_name по хосту реестра.
+    """Resolve registry_name from the registry host.
 
-    Для Docker: сопоставляет registry_host с groupUri И namespace с groupName.
-    Для Helm: сопоставляет registry_host с repositoryDomainName.
-    Если совпадение найдено — возвращает name из regdef.
-    Если нет — возвращает сам registry_host как fallback.
+    For Docker: matches registry_host against groupUri AND namespace against groupName.
+    For Helm: matches registry_host against repositoryDomainName.
+    If a match is found — returns the name from regdef.
+    If not — returns the registry_host itself as a fallback.
     """
     if not regdef:
         return registry_host
@@ -183,7 +183,7 @@ def _resolve_registry_name(
         group_name = regdef.docker_config.group_name
         for uri in uris:
             if uri and _hosts_match(registry_host, uri):
-                # Хост совпал — теперь проверяем groupName против namespace
+                # Host matched — now check groupName against namespace
                 if not group_name or _namespace_matches(namespace, group_name):
                     return regdef.name
 
@@ -192,15 +192,15 @@ def _resolve_registry_name(
         if domain and _hosts_match(registry_host, domain):
             return regdef.name
 
-    # Fallback: возвращаем сам хост
+    # Fallback: return the host itself
     return registry_host
 
 
 def _namespace_matches(namespace: str, group_name: str) -> bool:
-    """Проверить что namespace совпадает с groupName.
+    """Check that namespace matches groupName.
 
-    Точное совпадение или namespace начинается с groupName + "/".
-    Это позволяет вложенные пути: netcracker/team/sub совпадает с netcracker.
+    Exact match or namespace starts with groupName + "/".
+    This allows nested paths: netcracker/team/sub matches netcracker.
 
     _namespace_matches("netcracker", "netcracker") → True
     _namespace_matches("netcracker/team/sub", "netcracker") → True
@@ -211,7 +211,7 @@ def _namespace_matches(namespace: str, group_name: str) -> bool:
 
 
 def _hosts_match(host: str, uri: str) -> bool:
-    """Проверить что хост совпадает с URI (игнорируя протокол).
+    """Check that the host matches the URI (ignoring the protocol).
 
     _hosts_match("ghcr.io", "ghcr.io") → True
     _hosts_match("ghcr.io", "https://ghcr.io") → True

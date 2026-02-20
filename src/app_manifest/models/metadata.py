@@ -1,9 +1,9 @@
-"""Модели для JSON-метаданных компонентов.
+"""Pydantic models for component CI metadata JSON.
 
-Это файлы, которые генерируются в CI при сборке Docker-образов
-и Helm-чартов. Они передаются в CLI как позиционные аргументы.
+These files are generated in CI when building Docker images
+and Helm charts. They are passed to the CLI as positional arguments.
 
-Пример для Docker-образа:
+Docker image example:
 {
     "name": "jaeger",
     "type": "container",
@@ -14,7 +14,7 @@
     "reference": "sandbox.example.com/core/jaeger:build3"
 }
 
-Пример для Helm-чарта:
+Helm chart example:
 {
     "name": "kafka",
     "type": "application",
@@ -39,14 +39,14 @@ from pydantic import BaseModel, Field
 
 
 class HashEntry(BaseModel):
-    """Хеш артефакта (для проверки целостности)."""
+    """Artifact hash (for integrity verification)."""
 
     alg: str
     content: str
 
 
 class MetadataAttachment(BaseModel):
-    """Вложение с base64-содержимым из CI метаданных."""
+    """Attachment with base64-encoded content from CI metadata."""
 
     content_type: str = Field(alias="contentType")
     encoding: str = "base64"
@@ -56,13 +56,13 @@ class MetadataAttachment(BaseModel):
 
 
 class MetadataDataContents(BaseModel):
-    """Обёртка для attachment."""
+    """Wrapper for the attachment."""
 
     attachment: MetadataAttachment
 
 
 class MetadataDataEntry(BaseModel):
-    """Одна запись данных (например small.yaml)."""
+    """A single data entry (e.g. small.yaml)."""
 
     type: str = "configuration"
     name: str
@@ -70,11 +70,11 @@ class MetadataDataEntry(BaseModel):
 
 
 class MetadataNestedComponent(BaseModel):
-    """Вложенный компонент из CI метаданных Helm-чарта.
+    """Nested component from Helm chart CI metadata.
 
-    Например: values.schema.json или resource-profile-baselines.
-    Эти данные уже подготовлены CI в нужном формате и
-    передаются в выходной манифест почти без изменений.
+    For example: values.schema.json or resource-profile-baselines.
+    This data is already prepared by CI in the required format and
+    is passed to the output manifest almost unchanged.
     """
 
     type: str
@@ -86,17 +86,17 @@ class MetadataNestedComponent(BaseModel):
 
 
 class ComponentMetadata(BaseModel):
-    """Метаданные одного компонента из CI.
+    """Metadata for a single component from CI.
 
-    name — имя компонента (должно совпадать с именем в YAML-конфиге)
-    type — "container" для Docker, "application" для Helm
-    mime_type — тип компонента
-    group — группа/namespace (например "core") — необязательно
-    version — версия/тег — необязательно
-    app_version — версия приложения (для Helm-чартов) — необязательно
-    hashes — список хешей артефакта
-    reference — полная ссылка на артефакт
-    components — вложенные компоненты (values.schema.json, resource-profiles)
+    name — component name (must match the name in the YAML config)
+    type — "container" for Docker, "application" for Helm
+    mime_type — component type
+    group — group/namespace (e.g. "core") — optional
+    version — version/tag — optional
+    app_version — application version (for Helm charts) — optional
+    hashes — list of artifact hashes
+    reference — full reference to the artifact
+    components — nested components (values.schema.json, resource-profiles)
     """
 
     name: str

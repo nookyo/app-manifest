@@ -1,11 +1,11 @@
-"""Скачивание артефактов и создание мини-манифестов.
+"""Download artifacts and create mini-manifests.
 
-Helm-чарты: скачивает через helm CLI, извлекает Chart.yaml,
-values.schema.json, resource-profiles, считает SHA-256.
+Helm charts: downloads via helm CLI, extracts Chart.yaml,
+values.schema.json, resource-profiles, computes SHA-256.
 
-Docker-образы: если у компонента есть reference в конфиге,
-создаёт минимальный мини-манифест из reference без хеша
-(hash неизвестен без скачивания образа).
+Docker images: if a component has a reference in the config,
+creates a minimal mini-manifest from the reference without a hash
+(hash is unknown without pulling the image).
 """
 
 import base64
@@ -42,12 +42,12 @@ def fetch_components_from_config(
     config: BuildConfig,
     regdef: RegistryDefinition | None = None,
 ) -> list[tuple[str, CycloneDxBom]]:
-    """Обработать все компоненты с reference из конфига.
+    """Process all components with a reference defined in the config.
 
-    - Helm-чарты: скачивает через helm pull, создаёт полный мини-манифест.
-    - Docker-образы: создаёт минимальный мини-манифест из reference (без хеша).
+    - Helm charts: pulls via helm pull, creates a full mini-manifest.
+    - Docker images: creates a minimal mini-manifest from the reference (no hash).
 
-    Возвращает список (config_name, bom) для каждого обработанного компонента.
+    Returns a list of (config_name, bom) for each processed component.
     """
     results = []
     for comp in config.components:
@@ -62,7 +62,7 @@ def fetch_components_from_config(
     return results
 
 
-# Обратная совместимость: старое имя функции
+# Backwards compatibility alias
 fetch_helm_components_from_config = fetch_components_from_config
 
 
@@ -70,11 +70,11 @@ def fetch_docker_component_from_reference(
     comp_config: ComponentConfig,
     regdef: RegistryDefinition | None = None,
 ) -> CycloneDxBom:
-    """Создать мини-манифест для Docker-образа из reference.
+    """Create a mini-manifest for a Docker image from a reference.
 
-    Хеш не вычисляется (образ не скачивается).
-    name, version, group берутся из reference;
-    для name используется имя из конфига, чтобы generate мог сопоставить.
+    Hash is not computed (image is not pulled).
+    name, version, group are taken from the reference;
+    name is taken from the config so that generate can match it.
     """
     from datetime import datetime, timezone
 
@@ -122,31 +122,31 @@ def fetch_helm_component(
     regdef: RegistryDefinition | None = None,
     mime_type: str = "application/vnd.nc.helm.chart",
 ) -> CycloneDxBom:
-    """Скачать Helm-чарт и создать CycloneDX мини-манифест.
+    """Pull a Helm chart and create a CycloneDX mini-manifest.
 
-    reference — OCI URL (например oci://registry.example.com/charts/my-chart:1.0)
-    regdef — Registry Definition для PURL (опционально)
+    reference — OCI URL (e.g. oci://registry.example.com/charts/my-chart:1.0)
+    regdef — Registry Definition for PURL (optional)
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
 
-        # 1. Скачиваем чарт
+        # 1. Pull the chart
         tgz_path = _helm_pull(reference, tmp_path)
 
-        # 2. Считаем хеш архива
+        # 2. Compute the archive hash
         chart_hash = _compute_sha256(tgz_path)
 
-        # 3. Извлекаем архив
+        # 3. Extract the archive
         extract_dir = tmp_path / "extracted"
         _extract_chart(tgz_path, extract_dir)
 
-        # 4. Находим корневую директорию чарта
+        # 4. Find the chart root directory
         chart_dir = _find_chart_dir(extract_dir)
 
-        # 5. Читаем Chart.yaml
+        # 5. Read Chart.yaml
         chart_yaml = _read_chart_yaml(chart_dir)
 
-        # 6. Собираем данные
+        # 6. Collect data
         name = chart_yaml.get("name", "unknown")
         version = chart_yaml.get("version", "")
         app_version = chart_yaml.get("appVersion", version)
@@ -154,10 +154,10 @@ def fetch_helm_component(
         # 7. PURL
         purl = make_helm_purl(reference, regdef) if reference else None
 
-        # 8. Вложенные компоненты (values.schema.json, resource-profiles)
+        # 8. Nested components (values.schema.json, resource-profiles)
         nested = _extract_nested_components(chart_dir)
 
-        # 9. Собираем компонент
+        # 9. Build the component
         component = CdxComponent(
             bom_ref=_make_bom_ref(name),
             type="application",
@@ -169,7 +169,7 @@ def fetch_helm_component(
             components=nested,
         )
 
-        # 10. Собираем мини-манифест
+        # 10. Build the mini-manifest
         from datetime import datetime, timezone
 
         meta = CdxMetadata(
@@ -192,7 +192,7 @@ def fetch_helm_component(
 
 
 def _helm_pull(reference: str, dest: Path) -> Path:
-    """Скачать Helm-чарт через helm CLI."""
+    """Pull a Helm chart via the helm CLI."""
     try:
         result = subprocess.run(
             ["helm", "pull", reference, "--destination", str(dest)],
@@ -208,7 +208,7 @@ def _helm_pull(reference: str, dest: Path) -> Path:
     if result.returncode != 0:
         raise RuntimeError(f"helm pull failed: {result.stderr.strip()}")
 
-    # Находим скачанный .tgz файл
+    # Find the downloaded .tgz file
     tgz_files = sorted(dest.glob("*.tgz"))
     if not tgz_files:
         raise RuntimeError(f"No .tgz file found after helm pull in {dest}")
@@ -224,7 +224,7 @@ def _helm_pull(reference: str, dest: Path) -> Path:
 
 
 def _compute_sha256(path: Path) -> str:
-    """Вычислить SHA-256 хеш файла."""
+    """Compute SHA-256 hash of a file."""
     sha = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
@@ -233,20 +233,20 @@ def _compute_sha256(path: Path) -> str:
 
 
 def _extract_chart(tgz_path: Path, dest: Path) -> None:
-    """Извлечь .tgz архив."""
+    """Extract a .tgz archive."""
     dest.mkdir(parents=True, exist_ok=True)
     with tarfile.open(tgz_path, "r:gz") as tar:
         tar.extractall(dest, filter="data")
 
 
 def _find_chart_dir(extract_dir: Path) -> Path:
-    """Найти корневую директорию чарта в извлечённом архиве."""
-    # Helm-чарты обычно имеют структуру: chart-name/Chart.yaml
+    """Find the chart root directory in the extracted archive."""
+    # Helm charts typically have the structure: chart-name/Chart.yaml
     for child in extract_dir.iterdir():
         if child.is_dir() and (child / "Chart.yaml").exists():
             return child
 
-    # Может быть что Chart.yaml прямо в extract_dir
+    # Chart.yaml may also be directly in extract_dir
     if (extract_dir / "Chart.yaml").exists():
         return extract_dir
 
@@ -254,14 +254,14 @@ def _find_chart_dir(extract_dir: Path) -> Path:
 
 
 def _read_chart_yaml(chart_dir: Path) -> dict:
-    """Прочитать Chart.yaml."""
+    """Read Chart.yaml."""
     chart_file = chart_dir / "Chart.yaml"
     with open(chart_file, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def _extract_nested_components(chart_dir: Path) -> list[CdxComponent]:
-    """Извлечь вложенные компоненты: values.schema.json и resource-profiles."""
+    """Extract nested components: values.schema.json and resource-profiles."""
     result: list[CdxComponent] = []
 
     # values.schema.json

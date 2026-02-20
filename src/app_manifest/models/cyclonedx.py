@@ -1,10 +1,10 @@
-"""Модели выходного CycloneDX 1.6 JSON.
+"""Output CycloneDX 1.6 JSON models.
 
-Эти модели описывают структуру итогового Application Manifest.
-При вызове .model_dump(by_alias=True) они превращаются в JSON
-с правильными именами полей (bom-ref, $schema, bomFormat и т.д.).
+These models describe the structure of the final Application Manifest.
+Calling .model_dump(by_alias=True) serializes them to JSON
+with the correct field names (bom-ref, $schema, bomFormat, etc.).
 
-Пример итогового JSON (верхний уровень):
+Example top-level JSON output:
 {
     "$schema": "...",
     "bomFormat": "CycloneDX",
@@ -24,40 +24,40 @@ from pydantic import BaseModel, Field
 
 
 def _make_bom_ref(name: str) -> str:
-    """Сгенерировать bom-ref в формате name:uuid.
+    """Generate a bom-ref in the format name:uuid.
 
-    Из примеров видно что bom-ref всегда в формате:
+    Based on the spec, bom-ref always follows the format:
     "qubership-jaeger:61439aff-c00d-43f5-9bae-fe6db05db2d5"
     """
     return f"{name}:{uuid.uuid4()}"
 
 
-# ─── Хеши ────────────────────────────────────────────────
+# ─── Hashes ────────────────────────────────────────────────
 
 class CdxHash(BaseModel):
-    """Хеш артефакта. Пример: {"alg": "SHA-256", "content": "a1b2c3..."}"""
+    """Artifact hash. Example: {"alg": "SHA-256", "content": "a1b2c3..."}"""
 
     alg: str
     content: str
 
 
-# ─── Свойства ─────────────────────────────────────────────
+# ─── Properties ─────────────────────────────────────────────
 
 class CdxProperty(BaseModel):
-    """Свойство компонента. Пример: {"name": "isLibrary", "value": false}
+    """Component property. Example: {"name": "isLibrary", "value": false}
 
-    value — может быть строкой, числом, boolean или объектом,
-    поэтому тип Any.
+    value — can be a string, number, boolean, or object,
+    hence the type is Any.
     """
 
     name: str
     value: Any
 
 
-# ─── Вложенные данные (values.schema.json, resource-profiles) ──
+# ─── Nested data (values.schema.json, resource-profiles) ──────
 
 class CdxAttachment(BaseModel):
-    """Вложение с закодированным содержимым."""
+    """Attachment with encoded content."""
 
     content_type: str = Field(
         validation_alias="contentType",
@@ -70,15 +70,15 @@ class CdxAttachment(BaseModel):
 
 
 class CdxDataContents(BaseModel):
-    """Обёртка для вложения."""
+    """Wrapper for an attachment."""
 
     attachment: CdxAttachment
 
 
 class CdxDataEntry(BaseModel):
-    """Запись данных (например values.schema.json).
+    """Data entry (e.g. values.schema.json).
 
-    Пример:
+    Example:
     {
         "type": "configuration",
         "name": "values.schema.json",
@@ -91,17 +91,17 @@ class CdxDataEntry(BaseModel):
     contents: CdxDataContents
 
 
-# ─── Компонент ────────────────────────────────────────────
+# ─── Component ────────────────────────────────────────────
 
 class CdxComponent(BaseModel):
-    """Один компонент в манифесте.
+    """A single component in the manifest.
 
-    Может быть: standalone-runnable, docker image, helm chart,
-    values.schema.json, resource-profile и т.д.
+    Can be: standalone-runnable, docker image, helm chart,
+    values.schema.json, resource-profile, etc.
 
-    bom-ref — уникальный идентификатор в формате "name:uuid"
-    type — "application", "container" или "data"
-    mime-type — конкретный тип (например "application/vnd.docker.image")
+    bom-ref — unique identifier in the format "name:uuid"
+    type — "application", "container", or "data"
+    mime-type — specific type (e.g. "application/vnd.docker.image")
     """
 
     bom_ref: str = Field(
@@ -125,15 +125,15 @@ class CdxComponent(BaseModel):
     model_config = {"populate_by_name": True}
 
 
-# ─── Зависимости ─────────────────────────────────────────
+# ─── Dependencies ─────────────────────────────────────────
 
 class CdxDependency(BaseModel):
-    """Связь зависимости между компонентами.
+    """Dependency link between components.
 
-    ref — bom-ref компонента, который зависит
-    dependsOn — список bom-ref компонентов, от которых зависит
+    ref — bom-ref of the depending component
+    dependsOn — list of bom-ref values this component depends on
 
-    Пример:
+    Example:
     {
         "ref": "qubership-jaeger:aaa-bbb",
         "dependsOn": ["docker-jaeger:ccc-ddd", "chart-jaeger:eee-fff"]
@@ -153,7 +153,7 @@ class CdxDependency(BaseModel):
 # ─── Metadata ─────────────────────────────────────────────
 
 class CdxTool(BaseModel):
-    """Инструмент, сгенерировавший манифест."""
+    """Tool that generated the manifest."""
 
     type: str = "application"
     name: str
@@ -161,16 +161,16 @@ class CdxTool(BaseModel):
 
 
 class CdxToolsWrapper(BaseModel):
-    """Обёртка для списка инструментов.
+    """Wrapper for the list of tools.
 
-    В JSON: "tools": {"components": [{"name": "am-build-cli", ...}]}
+    In JSON: "tools": {"components": [{"name": "am-build-cli", ...}]}
     """
 
     components: list[CdxTool]
 
 
 class CdxMetadataComponent(BaseModel):
-    """Компонент в секции metadata — описание самого приложения."""
+    """Component in the metadata section — describes the application itself."""
 
     bom_ref: str = Field(
         validation_alias="bom-ref",
@@ -189,11 +189,11 @@ class CdxMetadataComponent(BaseModel):
 
 
 class CdxMetadata(BaseModel):
-    """Секция metadata манифеста.
+    """Manifest metadata section.
 
-    timestamp — когда сгенерирован (ISO 8601)
-    component — описание приложения
-    tools — чем сгенерирован
+    timestamp — when generated (ISO 8601)
+    component — the application description
+    tools — what generated the manifest
     """
 
     timestamp: str
@@ -201,12 +201,12 @@ class CdxMetadata(BaseModel):
     tools: CdxToolsWrapper
 
 
-# ─── Корневой BOM ─────────────────────────────────────────
+# ─── Root BOM ─────────────────────────────────────────
 
 class CycloneDxBom(BaseModel):
-    """Корневая модель Application Manifest (CycloneDX 1.6 BOM).
+    """Root model for the Application Manifest (CycloneDX 1.6 BOM).
 
-    Это то, что в итоге сериализуется в JSON-файл.
+    This is what gets serialized to the final JSON file.
     """
 
     serial_number: str = Field(

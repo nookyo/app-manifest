@@ -1,19 +1,19 @@
-"""Сборщик Application Manifest.
+"""Application Manifest builder.
 
-Берёт:
-  - BuildConfig (из YAML)
-  - CdxComponent (из CycloneDX мини-манифестов)
+Takes:
+  - BuildConfig (from YAML)
+  - CdxComponent (from CycloneDX mini-manifests)
 
-И собирает из них CycloneDxBom — готовый манифест.
+And assembles them into a CycloneDxBom — the final manifest.
 
-Логика сборки:
-  1. Создаём metadata секцию (имя, версия, timestamp, tools)
-  2. Определяем sub-chart'ы (helm→helm dependsOn) — они не попадают на верхний уровень
-  3. Для каждого компонента из конфига находим готовый CdxComponent из мини-манифеста
-  4. Перегенерируем bom-ref (вариант Б — generate контролирует идентификаторы)
-  5. Для app-chart (umbrella) — вкладываем sub-chart'ы внутрь components[]
-  6. standalone-runnable создаём из конфига (у него нет мини-манифеста)
-  7. Генерируем dependencies — связи между компонентами
+Assembly logic:
+  1. Build the metadata section (name, version, timestamp, tools)
+  2. Identify sub-charts (helm→helm dependsOn) — they are not added at the top level
+  3. For each component in the config, find the corresponding CdxComponent from the mini-manifests
+  4. Regenerate bom-ref (generate controls all identifiers)
+  5. For umbrella app-chart — embed sub-charts inside components[]
+  6. Create standalone-runnable from config (it has no mini-manifest)
+  7. Build dependencies — links between components
 """
 
 from datetime import datetime, timezone
@@ -31,13 +31,13 @@ from app_manifest.models.cyclonedx import (
     _make_bom_ref,
 )
 
-# Какие MimeType считаются docker-образами
+# MimeTypes treated as Docker images
 _DOCKER_TYPES = {MimeType.DOCKER_IMAGE}
 
-# Какие MimeType считаются standalone-runnable
+# MimeTypes treated as standalone-runnable
 _STANDALONE_TYPES = {MimeType.STANDALONE_RUNNABLE, MimeType.Q_STANDALONE_RUNNABLE}
 
-# Какие MimeType считаются helm-чартами
+# MimeTypes treated as Helm charts
 _HELM_TYPES = {MimeType.HELM_CHART, MimeType.Q_HELM_CHART}
 
 
@@ -47,36 +47,36 @@ def build_manifest(
     version_override: str | None = None,
     name_override: str | None = None,
 ) -> tuple[CycloneDxBom, list[str]]:
-    """Собрать Application Manifest из конфига и мини-манифестов.
+    """Assemble an Application Manifest from config and mini-manifests.
 
     Returns:
-        (bom, warnings) — готовый манифест и список предупреждений (пустой если всё хорошо).
+        (bom, warnings) — the assembled manifest and a list of warnings (empty if all is well).
     """
     app_name = name_override or config.application_name
     app_version = version_override or config.application_version
 
-    # --- 1. Определяем sub-chart'ы ---
+    # --- 1. Identify sub-charts ---
     sub_chart_keys = _find_sub_charts(config)
 
-    # --- 2. Создаём bom-ref для ВСЕХ компонентов (включая sub-charts) ---
+    # --- 2. Generate bom-ref for ALL components (including sub-charts) ---
     bom_refs: dict[tuple[str, MimeType], str] = {}
     for comp in config.components:
         bom_refs[(comp.name, comp.mime_type)] = _make_bom_ref(comp.name)
 
     app_bom_ref = _make_bom_ref(app_name)
 
-    # Индекс конфигов по (name, mime_type) для быстрого поиска
+    # Config index by (name, mime_type) for fast lookup
     config_index: dict[tuple[str, MimeType], ComponentConfig] = {
         (c.name, c.mime_type): c for c in config.components
     }
 
-    # --- 3. Создаём top-level компоненты (без sub-charts) ---
+    # --- 3. Build top-level components (excluding sub-charts) ---
     components: list[CdxComponent] = []
     warnings: list[str] = []
     for comp_config in config.components:
         key = (comp_config.name, comp_config.mime_type)
         if key in sub_chart_keys:
-            continue  # sub-chart — будет вложен в parent
+            continue  # sub-chart — will be nested inside the parent
 
         cdx_comp, warning = _build_component(
             comp_config, mini_manifests, bom_refs, app_version,
@@ -87,12 +87,12 @@ def build_manifest(
         if cdx_comp:
             components.append(cdx_comp)
 
-    # --- 4. Создаём dependencies ---
+    # --- 4. Build dependencies ---
     dependencies = _build_dependencies(
         config, bom_refs, app_bom_ref, sub_chart_keys,
     )
 
-    # --- 5. Создаём metadata ---
+    # --- 5. Build metadata ---
     meta = CdxMetadata(
         timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         component=CdxMetadataComponent(
@@ -105,7 +105,7 @@ def build_manifest(
         ),
     )
 
-    # --- 6. Собираем BOM ---
+    # --- 6. Assemble BOM ---
     bom = CycloneDxBom(
         metadata=meta,
         components=components,
@@ -115,9 +115,9 @@ def build_manifest(
 
 
 def _find_sub_charts(config: BuildConfig) -> set[tuple[str, MimeType]]:
-    """Найти компоненты которые являются sub-chart'ами.
+    """Find components that are sub-charts.
 
-    Если helm chart A имеет в dependsOn helm chart B → B sub-chart.
+    If helm chart A has helm chart B in dependsOn → B is a sub-chart.
     """
     sub_charts: set[tuple[str, MimeType]] = set()
     for comp in config.components:
@@ -136,18 +136,18 @@ def _build_component(
     config_index: dict[tuple[str, MimeType], ComponentConfig],
     sub_chart_keys: set[tuple[str, MimeType]],
 ) -> tuple[CdxComponent | None, str | None]:
-    """Создать CdxComponent для финального манифеста.
+    """Create a CdxComponent for the final manifest.
 
     Returns:
-        (component, warning) — компонент (или None если не найден) и строка предупреждения.
+        (component, warning) — the component (or None if not found) and a warning string.
     """
     bom_ref = bom_refs[(comp_config.name, comp_config.mime_type)]
 
-    # standalone-runnable — создаём из конфига (нет мини-манифеста)
+    # standalone-runnable — built from config (no mini-manifest)
     if comp_config.mime_type in _STANDALONE_TYPES:
         return _build_standalone_component(comp_config, bom_ref, app_version), None
 
-    # Ищем готовый компонент из мини-манифеста по (name, mime_type)
+    # Look up the component from the mini-manifests by (name, mime_type)
     source = _find_mini_manifest(comp_config, mini_manifests)
 
     if not source:
@@ -166,7 +166,7 @@ def _build_component(
     if comp_config.mime_type in _DOCKER_TYPES:
         return _build_docker_component(source, bom_ref), None
 
-    # Неизвестный тип — просто переназначаем bom-ref
+    # Unknown type — just reassign the bom-ref
     return source.model_copy(update={"bom_ref": bom_ref}), None
 
 
@@ -174,7 +174,7 @@ def _find_mini_manifest(
     comp_config: ComponentConfig,
     mini_manifests: dict[tuple[str, str], CdxComponent],
 ) -> CdxComponent | None:
-    """Найти CdxComponent в мини-манифестах по (name, mime_type)."""
+    """Find a CdxComponent in mini-manifests by (name, mime_type)."""
     key = (comp_config.name, comp_config.mime_type.value)
     return mini_manifests.get(key)
 
@@ -183,7 +183,7 @@ def _build_docker_component(
     source: CdxComponent,
     bom_ref: str,
 ) -> CdxComponent:
-    """Docker-образ: берём из мини-манифеста, перегенерируем bom-ref."""
+    """Docker image: copy from mini-manifest, regenerate bom-ref."""
     return source.model_copy(update={"bom_ref": bom_ref})
 
 
@@ -192,7 +192,7 @@ def _build_standalone_component(
     bom_ref: str,
     app_version: str,
 ) -> CdxComponent:
-    """Standalone-runnable: создаём из конфига."""
+    """Standalone-runnable: build from config."""
     return CdxComponent(
         bom_ref=bom_ref,
         type="application",
@@ -214,11 +214,11 @@ def _build_helm_component(
     config_index: dict[tuple[str, MimeType], ComponentConfig],
     sub_chart_keys: set[tuple[str, MimeType]],
 ) -> CdxComponent:
-    """Helm-чарт: берём из мини-манифеста + добавляем properties.
+    """Helm chart: copy from mini-manifest and add properties.
 
-    Для app-chart (umbrella) — вкладываем sub-chart'ы внутрь components[].
+    For umbrella app-chart — embed sub-charts inside components[].
     """
-    # Properties: isLibrary + artifactMappings (только docker deps этого chart'а)
+    # Properties: isLibrary + artifactMappings (docker deps of this chart only)
     properties: list[CdxProperty] = [
         CdxProperty(name="isLibrary", value=False),
     ]
@@ -230,14 +230,14 @@ def _build_helm_component(
             value=artifact_mappings,
         ))
 
-    # Перегенерируем bom-ref для вложенных компонентов из мини-манифеста
+    # Regenerate bom-ref for nested components from the mini-manifest
     # (values.schema, resource-profiles)
     nested: list[CdxComponent] = []
     if source.components:
         for c in source.components:
             nested.append(c.model_copy(update={"bom_ref": _make_bom_ref(c.name)}))
 
-    # Если это app-chart (umbrella) — добавляем sub-chart'ы как вложенные
+    # If this is an umbrella app-chart — embed sub-charts as nested components
     for dep in comp_config.depends_on:
         dep_key = (dep.name, dep.mime_type)
         if dep_key in sub_chart_keys:
@@ -245,7 +245,7 @@ def _build_helm_component(
             if sub_comp:
                 nested.append(sub_comp)
 
-    # Version: из мини-манифеста, fallback на app_version
+    # Version: from mini-manifest, fallback to app_version
     version = source.version or app_version
 
     return source.model_copy(update={
@@ -261,7 +261,7 @@ def _build_sub_chart(
     bom_refs: dict[tuple[str, MimeType], str],
     config_index: dict[tuple[str, MimeType], ComponentConfig],
 ) -> CdxComponent | None:
-    """Создать вложенный sub-chart компонент."""
+    """Create a nested sub-chart component."""
     name, mime_type = key
     bom_ref = bom_refs[key]
     comp_config = config_index.get(key)
@@ -294,7 +294,7 @@ def _build_artifact_mappings(
     comp_config: ComponentConfig,
     bom_refs: dict[tuple[str, MimeType], str],
 ) -> dict[str, dict[str, str]]:
-    """Построить artifactMappings из dependsOn (только не-helm deps)."""
+    """Build artifactMappings from dependsOn (non-helm deps only)."""
     mappings: dict[str, dict[str, str]] = {}
 
     for dep in comp_config.depends_on:
@@ -315,10 +315,10 @@ def _build_dependencies(
     app_bom_ref: str,
     sub_chart_keys: set[tuple[str, MimeType]],
 ) -> list[CdxDependency]:
-    """Построить массив dependencies."""
+    """Build the dependencies array."""
     dependencies: list[CdxDependency] = []
 
-    # Приложение (metadata) зависит от всех top-level компонентов
+    # The application (metadata) depends on all top-level components
     top_level_refs = [
         bom_refs[(c.name, c.mime_type)]
         for c in config.components
@@ -329,11 +329,11 @@ def _build_dependencies(
         depends_on=top_level_refs,
     ))
 
-    # Каждый top-level компонент — его dependsOn
+    # Each top-level component — its dependsOn
     for comp in config.components:
         comp_key = (comp.name, comp.mime_type)
         if comp_key in sub_chart_keys:
-            continue  # dependencies для sub-charts — ниже
+            continue  # dependencies for sub-charts are handled below
 
         comp_ref = bom_refs[comp_key]
         dep_refs = []
@@ -348,7 +348,7 @@ def _build_dependencies(
                 depends_on=dep_refs,
             ))
 
-    # Sub-chart'ы — их dependsOn (docker images)
+    # Sub-charts — their dependsOn (docker images)
     for sub_key in sub_chart_keys:
         comp_config = next(
             (c for c in config.components if (c.name, c.mime_type) == sub_key),

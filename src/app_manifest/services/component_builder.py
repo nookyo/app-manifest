@@ -1,9 +1,9 @@
-"""Построитель мини-манифеста CycloneDX для одного компонента.
+"""CycloneDX mini-manifest builder for a single component.
 
-Конвертирует CI метаданные (ComponentMetadata) в CycloneDX мини-манифест.
-На выходе — валидный CycloneDX BOM с одним компонентом.
+Converts CI metadata (ComponentMetadata) into a CycloneDX mini-manifest.
+Output is a valid CycloneDX BOM with a single component.
 
-Используется командой component.
+Used by the component command.
 """
 
 from app_manifest.models.cyclonedx import (
@@ -23,7 +23,7 @@ from app_manifest.models.metadata import ComponentMetadata
 from app_manifest.models.regdef import RegistryDefinition
 from app_manifest.services.purl import make_docker_purl, make_helm_purl
 
-# mime-type паттерны для определения типа компонента
+# mime-type patterns for determining the component type
 _DOCKER_MIME_PATTERNS = ("docker.image",)
 _HELM_MIME_PATTERNS = ("helm.chart",)
 
@@ -32,12 +32,12 @@ def build_component_manifest(
     meta: ComponentMetadata,
     regdef: RegistryDefinition | None = None,
 ) -> CycloneDxBom:
-    """Создать CycloneDX мини-манифест из CI метаданных.
+    """Create a CycloneDX mini-manifest from CI metadata.
 
-    meta — метаданные компонента из CI
-    regdef — Registry Definition для генерации PURL (опционально)
+    meta — component metadata from CI
+    regdef — Registry Definition for PURL generation (optional)
 
-    Возвращает CycloneDxBom с одним компонентом в components.
+    Returns a CycloneDxBom with a single component in components.
     """
     component = _build_component(meta, regdef)
 
@@ -49,7 +49,7 @@ def build_component_manifest(
 
 
 def _build_mini_metadata() -> CdxMetadata:
-    """Минимальная metadata секция для мини-манифеста."""
+    """Minimal metadata section for a mini-manifest."""
     from datetime import datetime, timezone
 
     return CdxMetadata(
@@ -69,13 +69,13 @@ def _build_component(
     meta: ComponentMetadata,
     regdef: RegistryDefinition | None,
 ) -> CdxComponent:
-    """Создать CdxComponent из CI метаданных."""
+    """Create a CdxComponent from CI metadata."""
     if _is_docker(meta.mime_type):
         return _build_docker(meta, regdef)
     if _is_helm(meta.mime_type):
         return _build_helm(meta, regdef)
 
-    # Неизвестный тип — базовый компонент
+    # Unknown type — return a basic component
     return CdxComponent(
         bom_ref=_make_bom_ref(meta.name),
         type=meta.type,
@@ -89,7 +89,7 @@ def _build_docker(
     meta: ComponentMetadata,
     regdef: RegistryDefinition | None,
 ) -> CdxComponent:
-    """Docker-образ → CdxComponent."""
+    """Docker image → CdxComponent."""
     purl = None
     if meta.reference:
         purl = make_docker_purl(meta.reference, regdef)
@@ -112,7 +112,7 @@ def _build_helm(
     meta: ComponentMetadata,
     regdef: RegistryDefinition | None,
 ) -> CdxComponent:
-    """Helm-чарт → CdxComponent."""
+    """Helm chart → CdxComponent."""
     purl = None
     if meta.reference:
         purl = make_helm_purl(meta.reference, regdef)
@@ -136,14 +136,14 @@ def _build_helm(
 
 
 def _convert_hashes(meta: ComponentMetadata) -> list[CdxHash] | None:
-    """Преобразовать хеши из metadata в CdxHash."""
+    """Convert hashes from metadata to CdxHash."""
     if not meta.hashes:
         return None
     return [CdxHash(alg=h.alg, content=h.content) for h in meta.hashes]
 
 
 def _convert_nested_components(meta: ComponentMetadata) -> list[CdxComponent]:
-    """Преобразовать вложенные компоненты (values.schema.json, resource-profiles)."""
+    """Convert nested components (values.schema.json, resource-profiles)."""
     if not meta.components:
         return []
 
@@ -175,10 +175,10 @@ def _convert_nested_components(meta: ComponentMetadata) -> list[CdxComponent]:
 
 
 def _is_docker(mime_type: str) -> bool:
-    """Проверить что mime-type относится к Docker."""
+    """Return True if the mime-type belongs to Docker."""
     return any(p in mime_type for p in _DOCKER_MIME_PATTERNS)
 
 
 def _is_helm(mime_type: str) -> bool:
-    """Проверить что mime-type относится к Helm."""
+    """Return True if the mime-type belongs to Helm."""
     return any(p in mime_type for p in _HELM_MIME_PATTERNS)

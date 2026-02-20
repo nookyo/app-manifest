@@ -1,4 +1,4 @@
-"""Обратная совместимость: модуль переименован в artifact_fetcher."""
+"""Backwards compatibility: module renamed to artifact_fetcher."""
 
 from app_manifest.services.artifact_fetcher import (  # noqa: F401
     fetch_components_from_config,
