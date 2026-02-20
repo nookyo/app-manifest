@@ -1,11 +1,12 @@
 # am — Application Manifest CLI
 
-`am` builds an **Application Manifest** — a single JSON file that describes the complete
-composition of a software release: every Docker image, every Helm chart, their versions,
-cryptographic hashes, registry addresses, and dependency graph.
+`am` is a CLI tool that generates an **Application Manifest** in three steps:
+component mini-manifests → Helm chart mini-manifests → final Application Manifest.
 
-The manifest follows the [CycloneDX 1.6](https://cyclonedx.org/specification/overview/)
-BOM (Bill of Materials) standard.
+The manifest is a single JSON file describing the complete composition of a software
+release: every Docker image, every Helm chart, their versions, cryptographic hashes,
+registry addresses, and dependency graph. It follows the
+[CycloneDX 1.6](https://cyclonedx.org/specification/overview/) BOM standard.
 
 ---
 
