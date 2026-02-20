@@ -10,10 +10,10 @@ Two `am` commands read this file:
 - `am generate` — uses it to assemble the final manifest and build the dependency graph
 
 For the three-step pipeline overview see [README — How it works](../README.md#how-it-works).
-For all command options and flags see [commands.md](commands.md).
+For all command options and flags see the [Commands Reference](commands.md).
 
 A full real-world example is available at
-[`tests/fixtures/configs/jaeger_full_config.yaml`](../tests/fixtures/configs/jaeger_full_config.yaml).
+[jaeger_full_config.yaml](../tests/fixtures/configs/jaeger_full_config.yaml).
 
 ---
 

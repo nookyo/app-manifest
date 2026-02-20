@@ -43,7 +43,7 @@ The CI metadata JSON is created by your CI system — typically a build script o
 that runs after `docker push` or `helm push`. It captures what was just built and pushed.
 
 You are responsible for writing this file in your CI pipeline in the format described below.
-See [`tests/fixtures/metadata/`](../tests/fixtures/metadata/) for real examples.
+See [fixture examples](../tests/fixtures/metadata/) for real files.
 
 #### Docker image
 
@@ -143,7 +143,7 @@ Supported hash algorithms: `MD5`, `SHA-1`, `SHA-256`, `SHA-512`.
 ### Output
 
 A mini-manifest JSON file (CycloneDX BOM with one component in `components[]`).
-See [mini-manifests.md](mini-manifests.md) for the format and naming rules.
+See [Mini-manifests](mini-manifests.md) for the format and naming rules.
 
 ### Examples
 
@@ -220,7 +220,7 @@ is added to avoid overwriting: `{out-dir}/{name}_{mime_suffix}.json`.
 The suffix is the mime-type without `application/`, dots replaced by underscores
 (e.g. `vnd_nc_helm_chart`).
 
-See [mini-manifests.md — Naming in `fetch`](mini-manifests.md#naming-in-fetch) for full rules.
+See [Naming in fetch](mini-manifests.md#naming-in-fetch) for full rules.
 
 ### Examples
 
@@ -313,11 +313,11 @@ am generate -c cfg.yaml -o out.json minis/ extra/custom.json
 Matching is done by `(name, mime-type)` read from the mini-manifest content —
 **not by filename**. The filename is irrelevant.
 
-See [mini-manifests.md — How generate loads and matches mini-manifests](mini-manifests.md#how-generate-loads-and-matches-mini-manifests).
+See [How generate loads and matches mini-manifests](mini-manifests.md#how-generate-loads-and-matches-mini-manifests).
 
 ### Assembly
 
-See [manifest-assembly.md](manifest-assembly.md) for the complete description
+See [Manifest Assembly](manifest-assembly.md) for the complete description
 of how the final manifest is built from mini-manifests and the build config.
 
 ### --validate flag

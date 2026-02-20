@@ -31,13 +31,13 @@ To build a manifest you need two things:
 It lists all components: Docker images, Helm charts, their types, registry references,
 and how they depend on each other.
 
-See [docs/configuration.md](docs/configuration.md) for the format and field reference.
+See the [Build Config Reference](docs/configuration.md) for the format and field reference.
 
 **2. CI metadata JSON** — one JSON file per image or chart built in your CI pipeline.
 Your CI system writes this file after a successful build and push.
 It contains the component name, version, SHA-256 hash, and registry address.
 
-See [docs/commands.md — Input format](docs/commands.md#input-format) for the exact JSON format
+See [Input format](docs/commands.md#input-format) in the Commands Reference for the exact JSON format
 your CI must produce.
 
 > If a component is not built in CI (e.g. a third-party Helm chart fetched from a registry),
@@ -93,7 +93,7 @@ am generate -c build-config.yaml -o manifest.json --validate minis/
 A **mini-manifest** is an intermediate file that describes exactly one component.
 You never use mini-manifests directly — they are consumed by `am generate`.
 
-For a complete worked example see [docs/examples.md](docs/examples.md).
+For a complete worked example see the [Examples](docs/examples.md).
 
 ---
 

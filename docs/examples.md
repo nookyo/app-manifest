@@ -22,7 +22,7 @@ Jaeger consists of:
 
 ### Build config
 
-[`tests/fixtures/configs/jaeger_full_config.yaml`](../tests/fixtures/configs/jaeger_full_config.yaml)
+[jaeger_full_config.yaml](../tests/fixtures/configs/jaeger_full_config.yaml)
 
 ```yaml
 applicationVersion: "1.2.3"
@@ -66,7 +66,7 @@ components:
 
 ### CI metadata files (for `component` command)
 
-Located in [`tests/fixtures/metadata/`](../tests/fixtures/metadata/):
+Located in [tests/fixtures/metadata/](../tests/fixtures/metadata/):
 
 | File                                     | Image                                     | Source      |
 | ---------------------------------------- | ----------------------------------------- | ----------- |
@@ -148,7 +148,7 @@ Output: `manifest.json` validated against the JSON Schema.
 
 ## Output manifest structure
 
-[`tests/fixtures/examples/jaeger_manifest.json`](../tests/fixtures/examples/jaeger_manifest.json)
+[jaeger_manifest.json](../tests/fixtures/examples/jaeger_manifest.json)
 
 ```
 components (13 total):

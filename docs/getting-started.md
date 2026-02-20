@@ -84,7 +84,7 @@ components:
 - A Docker image **without** `reference` must have a CI metadata JSON produced by your CI pipeline.
 - A Helm chart **with** `reference` is downloaded by `am fetch` via `helm pull`.
 
-See [configuration.md](configuration.md) for the full field reference.
+See the [Build Config Reference](configuration.md) for the full field reference.
 
 ---
 
@@ -248,6 +248,6 @@ echo "Manifest ready: manifest.json"
 
 ## What's next
 
-- See [docs/examples.md](examples.md) for a complete real-world walkthrough using Jaeger
-- See [docs/configuration.md](configuration.md) for the full `build-config.yaml` field reference
-- See [docs/commands.md](commands.md) for all command options and flags
+- See [Examples](examples.md) for a complete real-world walkthrough using Jaeger
+- See the [Build Config Reference](configuration.md) for the full `build-config.yaml` field reference
+- See the [Commands Reference](commands.md) for all command options and flags
