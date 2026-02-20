@@ -10,6 +10,9 @@ It is built on the [CycloneDX 1.6](https://cyclonedx.org/specification/overview/
 BOM (Bill of Materials) standard — an open format for describing software components
 and supply chain metadata.
 
+Built with [Python 3.12+](https://www.python.org/), [Pydantic v2](https://docs.pydantic.dev/latest/),
+[Click](https://click.palletsprojects.com/), and the [Helm CLI](https://helm.sh/docs/intro/install/).
+
 **Why do you need it?**
 
 - Know exactly what is deployed: image digests, chart versions, registry locations
@@ -50,15 +53,26 @@ that are combined in the final step into the Application Manifest.
                                     Application Manifest JSON
 ```
 
-**Step 1 — `am component`**: for each image built in your CI pipeline, converts
-the CI-produced metadata JSON into a mini-manifest. The hash is taken from CI.
+**Step 1** — for each image built in your CI pipeline, convert the CI-produced
+metadata JSON into a mini-manifest (hash taken from CI):
 
-**Step 2 — `am fetch`**: for Helm charts and third-party Docker images that are
-referenced by URL (not built in CI), produces mini-manifests automatically —
-charts are downloaded via `helm pull`, Docker images are parsed from the reference URL.
+```sh
+am component -i ci/jaeger-meta.json -o minis/jaeger.json
+```
 
-**Step 3 — `am generate`**: reads all mini-manifests and the build config, matches
-them by component identity `(name, mimeType)`, and assembles the final manifest.
+**Step 2** — for Helm charts and third-party Docker images referenced by URL
+(not built in CI), fetch and produce mini-manifests automatically:
+
+```sh
+am fetch -c build-config.yaml -o minis/
+```
+
+**Step 3** — read all mini-manifests and the build config, match by component
+identity `(name, mimeType)`, and assemble the final manifest:
+
+```sh
+am generate -c build-config.yaml -o manifest.json --validate minis/
+```
 
 > Steps 1 and 2 are independent and can run in parallel.
 > Step 3 requires both to complete.
@@ -84,11 +98,13 @@ For a complete worked example see [docs/examples.md](docs/examples.md).
 ## Installation
 
 ```bash
+git clone https://github.com/nookyo/app-manifest.git
+cd app-manifest
 pip install -e .
 am --help
 ```
 
-Requires **Python 3.12+** and `helm` CLI (for the `fetch` command).
+Requires **Python 3.12+** and [`helm` CLI](https://helm.sh/docs/intro/install/) (for the `fetch` command).
 
 ---
 
