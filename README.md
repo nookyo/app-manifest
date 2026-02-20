@@ -109,16 +109,15 @@ For a complete worked example see [Examples](docs/examples.md).
 
 ## Documentation
 
-| | |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [**Getting Started**](docs/getting-started.md)       | **Start here** — step-by-step guide from zero to a ready manifest                |
-| [**Build Config Reference**](docs/configuration.md)  | `build-config.yaml` format: fields, component types, registry definition         |
-| [**Commands Reference**](docs/commands.md)           | Full reference for all four `am` commands and their options                      |
-| [**Examples**](docs/examples.md)                     | Complete Jaeger example: config, CI metadata, pipeline commands, output          |
-| [**Mini-manifests**](docs/mini-manifests.md)         | Mini-manifest format, naming rules, collision handling                           |
-| [**Manifest Assembly**](docs/manifest-assembly.md)   | How `generate` builds the final manifest (detailed algorithm)                    |
-| [**Architecture**](docs/architecture.md)             | High-level architecture and data flow                                            |
-| [**Design Decisions**](docs/design-decisions.md)     | Motivation for key design choices                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------ |
+| [**Getting Started**](docs/getting-started.md)      | **Start here** — step-by-step guide from zero to a ready manifest        |
+| [**Build Config Reference**](docs/configuration.md) | `build-config.yaml` format: fields, component types, registry definition |
+| [**Commands Reference**](docs/commands.md)          | Full reference for all four `am` commands and their options              |
+| [**Examples**](docs/examples.md)                    | Complete Jaeger example: config, CI metadata, pipeline commands, output  |
+| [**Mini-manifests**](docs/mini-manifests.md)        | Mini-manifest format, naming rules, collision handling                   |
+| [**Manifest Assembly**](docs/manifest-assembly.md)  | How `generate` builds the final manifest (detailed algorithm)            |
+| [**Architecture**](docs/architecture.md)            | High-level architecture and data flow                                    |
+| [**Design Decisions**](docs/design-decisions.md)    | Motivation for key design choices                                        |
 
 ---
 
