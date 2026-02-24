@@ -118,6 +118,7 @@ For a complete worked example see [Examples](docs/examples.md).
 | [**Examples**](docs/examples.md)                    | Complete Jaeger example: config, CI metadata, pipeline commands, output  |
 | [**Mini-manifests**](docs/mini-manifests.md)        | Mini-manifest format, naming rules, collision handling                   |
 | [**Manifest Assembly**](docs/manifest-assembly.md)  | How `generate` builds the final manifest (detailed algorithm)            |
+| [**PURL Reference**](docs/purl.md)                  | How Package URLs are generated for Docker and Helm components            |
 | [**Architecture**](docs/architecture.md)            | High-level architecture and data flow                                    |
 | [**Design Decisions**](docs/design-decisions.md)    | Motivation for key design choices                                        |
 

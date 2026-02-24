@@ -1,9 +1,9 @@
-"""Модели для Registry Definition v2.0.
+"""Pydantic models for Registry Definition v2.0.
 
-Registry Definition описывает реестры артефактов (Docker, Helm, и др.)
-и используется для определения registry_name при генерации PURL.
+A Registry Definition describes artifact registries (Docker, Helm, etc.)
+and is used to resolve registry_name when generating PURLs.
 
-Пример файла (qubership.yml):
+Example (qubership.yml):
     version: "2.0"
     name: qubership
     dockerConfig:
@@ -13,7 +13,7 @@ Registry Definition описывает реестры артефактов (Dock
       repositoryDomainName: oci://registry.qubership.org
       helmGroupRepoName: helm-group
 
-Пример файла (sandbox.yml):
+Example (sandbox.yml):
     version: "2.0"
     name: sandbox
     dockerConfig:
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 
 
 class DockerConfig(BaseModel):
-    """Конфигурация Docker-реестра."""
+    """Docker registry configuration."""
 
     group_uri: str | None = Field(default=None, alias="groupUri")
     group_name: str | None = Field(default=None, alias="groupName")
@@ -39,7 +39,7 @@ class DockerConfig(BaseModel):
 
 
 class HelmAppConfig(BaseModel):
-    """Конфигурация Helm-реестра."""
+    """Helm registry configuration."""
 
     repository_domain_name: str | None = Field(
         default=None, alias="repositoryDomainName"
@@ -52,7 +52,7 @@ class HelmAppConfig(BaseModel):
 
 
 class GitHubReleaseConfig(BaseModel):
-    """Конфигурация GitHub Releases."""
+    """GitHub Releases configuration."""
 
     repository_domain_name: str | None = Field(
         default=None, alias="repositoryDomainName"
@@ -65,10 +65,10 @@ class GitHubReleaseConfig(BaseModel):
 
 
 class RegistryDefinition(BaseModel):
-    """Корневая модель Registry Definition v2.0.
+    """Root model for Registry Definition v2.0.
 
-    name — имя реестра (например "sandbox", "qubership")
-    Это имя используется как registry_name в PURL.
+    name — registry name (e.g. "sandbox", "qubership").
+    This name is used as registry_name in PURLs.
     """
 
     version: str = "2.0"

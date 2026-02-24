@@ -159,7 +159,9 @@ helmAppConfig:
 | ---------------------------------- | -------------------------------------------------------------------- |
 | `name`                             | Logical registry name written into PURLs as `registry_name=...`      |
 | `dockerConfig.groupUri`            | Hostname of the main Docker registry                                 |
+| `dockerConfig.groupName`           | Expected namespace prefix in the image path (e.g. `netcracker`)     |
 | `dockerConfig.snapshotUri`         | Hostname used for snapshot or development image builds               |
+| `dockerConfig.stagingUri`          | Hostname used for staging image builds                               |
 | `dockerConfig.releaseUri`          | Hostname used for stable or release image builds                     |
 | `helmAppConfig.repositoryDomainName` | Base OCI URL of the Helm chart registry                            |
 
