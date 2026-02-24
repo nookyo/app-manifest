@@ -12,15 +12,15 @@ registry addresses, and dependency graph. It follows the
 
 ## Why you need it
 
-Without a manifest, you cannot know exactly what is running in production:
-which image digest, which chart version, from which registry.
+The Application Manifest is the **input to the NC deployment tooling** that deploys
+applications to ArgoCD. Before a deployment can start, the tool needs to know:
 
-With a manifest you can:
+- Which Docker images to deploy, their exact versions and digests
+- Which Helm charts to use, their versions and registry locations
+- How all components depend on each other
 
-- Know exactly what is deployed: image digests, chart versions, registry addresses
-- Track what changed between releases at the component level
-- Feed vulnerability scanning, auditing, and deployment tooling with structured data
-- Verify that every component is present and accounted for before a release
+The manifest provides all of this in a single structured file, produced at release time
+in CI. Without it, the deployment tool has no source of truth about what to deploy.
 
 ---
 
