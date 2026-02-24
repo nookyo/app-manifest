@@ -173,7 +173,7 @@ dependencies (3 entries):
                              jaeger-es-index-cleaner, jaeger-es-rollover,
                              envoy, openjdk, spark-dependencies-image,
                              qubership-deployment-status-provisioner]
-  metadata (app)         -> [cassandra, qubership-jaeger, all 11 docker images]
+  metadata (app)         -> [qubership-jaeger (standalone), qubership-jaeger (helm), all 11 docker images]
 ```
 
 ### Fragment: standalone and helm components

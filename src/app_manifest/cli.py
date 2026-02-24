@@ -135,7 +135,7 @@ def fetch(config, out, registry_def):
         for name, bom in results:
             if name_counts[name] > 1:
                 mime = bom.components[0].mime_type if bom.components else ""
-                suffix = _vendor_suffix(mime)
+                suffix = mime.split("/")[1].replace(".", "_") if "/" in mime else "unknown"
                 out_file = out_dir / f"{name}_{suffix}.json"
                 click.echo(
                     f"WARNING: duplicate component name '{name}' — "
@@ -207,27 +207,6 @@ def _load_regdef(registry_def_path: Path | None):
         raise click.ClickException(
             f"Registry definition validation error in {registry_def_path}: {errors}"
         )
-
-
-def _vendor_suffix(mime_type: str) -> str:
-    """Extract a short vendor suffix from a MIME type for deduplication.
-
-    Examples:
-        "application/vnd.nc.helm.chart"         → "nc"
-        "application/vnd.qubership.helm.chart"  → "qubership"
-        "application/vnd.docker.image"          → "docker"
-        "unknown"                               → "unknown"
-    """
-    # Expected format: application/vnd.<vendor>.<subtype>
-    parts = mime_type.split("/")
-    if len(parts) < 2:
-        return "unknown"
-    subtype = parts[1]  # e.g. "vnd.nc.helm.chart"
-    segments = subtype.split(".")
-    # segments[0] == "vnd", segments[1] == vendor name
-    if len(segments) >= 2 and segments[0] == "vnd":
-        return segments[1]
-    return subtype.replace(".", "_")
 
 
 def _write_output(bom, out_path: Path):

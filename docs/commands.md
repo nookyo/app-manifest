@@ -218,7 +218,7 @@ Files are written to `{out-dir}/{name}.json` where `name` comes from the config.
 If two components share the same name but have different mime-types, a mime-type suffix
 is added to avoid overwriting: `{out-dir}/{name}_{mime_suffix}.json`.
 The suffix is the mime-type without `application/`, dots replaced by underscores
-(e.g. `vnd_nc_helm_chart`).
+(e.g. `vnd_nc_helm_chart` for `application/vnd.nc.helm.chart`).
 
 See [Naming in fetch](mini-manifests.md#naming-in-fetch) for full rules.
 

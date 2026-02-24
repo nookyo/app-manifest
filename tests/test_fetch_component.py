@@ -437,12 +437,12 @@ class TestFetchDuplicateNameWarning:
             ])
 
         assert result.exit_code == 0, result.output
-        # Оба файла созданы с уникальными именами
-        assert (out_dir / "my-chart_nc.json").exists()
-        assert (out_dir / "my-chart_qubership.json").exists()
-        # Нет файла без суффикса
+        # Both files created with unique names based on full mime-type suffix
+        assert (out_dir / "my-chart_vnd_nc_helm_chart.json").exists()
+        assert (out_dir / "my-chart_vnd_qubership_helm_chart.json").exists()
+        # No file without suffix
         assert not (out_dir / "my-chart.json").exists()
-        # Warning в stderr
+        # Warning in stderr
         assert "duplicate" in result.stderr
         assert "my-chart" in result.stderr
 
