@@ -119,11 +119,35 @@ EOF
 ```
 
 Where `IMAGE_TAG` and `IMAGE_DIGEST` are variables set by your CI after the build.
-Most CI systems expose the image digest after `docker push` — for example:
+`IMAGE_DIGEST` must be the raw SHA-256 hex string (64 characters), **without** the `sha256:` prefix.
 
-```bash
-# Docker CLI (returns the digest of the pushed image)
-IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' my-app-backend:latest | cut -d'@' -f2 | cut -d':' -f2)
+How to get it in common CI systems:
+
+**GitHub Actions:**
+```yaml
+- name: Build and push
+  id: push
+  uses: docker/build-push-action@v5
+  with:
+    push: true
+    tags: registry.example.com/myorg/my-app-backend:${{ env.IMAGE_TAG }}
+
+- name: Write metadata
+  run: |
+    IMAGE_DIGEST=$(echo "${{ steps.push.outputs.digest }}" | cut -d':' -f2)
+    cat > ci-output/my-app-backend-meta.json << EOF
+    { ..., "hashes": [{ "alg": "SHA-256", "content": "${IMAGE_DIGEST}" }] }
+    EOF
+```
+
+**GitLab CI:**
+```yaml
+build:
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA
+    - IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA | cut -d'@' -f2 | cut -d':' -f2)
+    - echo "{\"hashes\":[{\"alg\":\"SHA-256\",\"content\":\"$IMAGE_DIGEST\"}]}" > ci-output/my-app-backend-meta.json
 ```
 
 > **Important**: `name` and `mime-type` in this file must exactly match the corresponding

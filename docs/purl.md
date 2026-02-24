@@ -132,6 +132,23 @@ pkg:helm/<namespace>/<name>@<version>?registry_name=<registry>
 
 ## registry_name and Registry Definition
 
+### Why registry_name matters
+
+The NC deployment tooling reads `registry_name` to know **which registry to pull from**
+when deploying the application to ArgoCD. It uses the logical name — not the raw hostname —
+to look up the registry credentials and access configuration.
+
+For example:
+- `registry_name=qubership` → the tool knows this is the internal Qubership registry,
+  uses the corresponding credentials and pull policy
+- `registry_name=docker.io` → public Docker Hub, no credentials needed
+
+If `registry_name` contains a raw hostname like `123456789.dkr.ecr.eu-west-1.amazonaws.com`,
+the deployment tool may not recognise it. A Registry Definition maps that hostname
+to a known logical name so the tool can resolve it correctly.
+
+---
+
 By default `registry_name` is set to the raw hostname extracted from the reference:
 
 ```
