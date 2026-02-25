@@ -15,7 +15,10 @@ Before you begin, make sure you have:
 - **`am` CLI** installed (see [Installation](../README.md#installation))
 - **`helm` CLI** installed and in `PATH` — required only if your app uses Helm charts
   that are fetched from a registry (not built in CI)
-- Access to your Docker/Helm registry (for `am fetch` to run `helm pull`)
+- **Helm registry authenticated** — if you use `am fetch` for Helm charts, `helm` must
+  already be logged in to your registry (`helm registry login <registry>`).
+  `am fetch` calls `helm pull` directly and does not handle authentication itself.
+  In CI this is typically done as an early step in your workflow.
 
 ---
 
@@ -94,10 +97,46 @@ See the [Build Config Reference](configuration.md) for the full field reference.
 
 ## Step 2: Set up CI to produce metadata JSON
 
-For each Docker image (or Helm chart) built in your CI pipeline, add a step that writes
-a JSON file with the build output. This file is what `am component` reads.
+For each Docker image or Helm chart built in your CI pipeline, you need a JSON metadata file
+that describes what was just built. This file is what `am component` reads.
 
-**Example for a Docker image** — add this after `docker push`:
+There are two ways to get this file depending on which CI actions you use:
+
+---
+
+### Option A — Qubership reusable actions (recommended)
+
+If your CI uses the [Netcracker/qubership-workflow-hub](https://github.com/Netcracker/qubership-workflow-hub) actions,
+the metadata JSON is generated **automatically** at the end of the build job:
+
+- **Docker**: [`docker-action`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/actions/docker-action)
+  produces the file and exposes its path via the `metadata_path` output.
+- **Helm**: [`charts-values-update-action`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/actions/charts-values-update-action)
+  runs `chart-metadata.sh` after packaging, producing the file automatically.
+
+Upload the file as a CI artifact in the build job, then download it and pass it to `am component`
+in the manifest assembly job:
+
+```yaml
+# In the manifest assembly job (GitHub Actions example):
+- name: Download metadata artifacts
+  uses: actions/download-artifact@v4
+  with:
+    path: ci-output/
+
+- name: Run am component
+  run: |
+    am component -i ci-output/my-app-backend-meta.json -o minis/my-app-backend.json
+```
+
+---
+
+### Option B — Standard actions (write the JSON yourself)
+
+If you use standard actions (`docker/build-push-action`, plain `docker push`, `helm push`),
+add a step at the end of your build job that writes the metadata file from CI outputs.
+
+**Docker image** — add this after `docker push`:
 
 ```bash
 cat > ci-output/my-app-backend-meta.json << EOF
@@ -118,12 +157,38 @@ cat > ci-output/my-app-backend-meta.json << EOF
 EOF
 ```
 
-Where `IMAGE_TAG` and `IMAGE_DIGEST` are variables set by your CI after the build.
+**Helm chart** — add this after `helm push`:
+
+```bash
+cat > ci-output/my-chart-meta.json << EOF
+{
+  "name": "my-chart",
+  "type": "application",
+  "mime-type": "application/vnd.nc.helm.chart",
+  "version": "${CHART_VERSION}",
+  "appVersion": "${APP_VERSION}",
+  "hashes": [
+    {
+      "alg": "SHA-256",
+      "content": "${CHART_DIGEST}"
+    }
+  ],
+  "reference": "oci://registry.example.com/charts/my-chart:${CHART_VERSION}"
+}
+EOF
+```
+
+Where `CHART_DIGEST` is the SHA-256 hash of the packaged `.tgz` file:
+
+```bash
+CHART_DIGEST=$(sha256sum my-chart-${CHART_VERSION}.tgz | cut -d' ' -f1)
+```
+
 `IMAGE_DIGEST` must be the raw SHA-256 hex string (64 characters), **without** the `sha256:` prefix.
 
 How to get it in common CI systems:
 
-**GitHub Actions:**
+**GitHub Actions (Docker):**
 ```yaml
 - name: Build and push
   id: push
@@ -136,18 +201,37 @@ How to get it in common CI systems:
   run: |
     IMAGE_DIGEST=$(echo "${{ steps.push.outputs.digest }}" | cut -d':' -f2)
     cat > ci-output/my-app-backend-meta.json << EOF
-    { ..., "hashes": [{ "alg": "SHA-256", "content": "${IMAGE_DIGEST}" }] }
+    {
+      "name": "my-app-backend",
+      "type": "container",
+      "mime-type": "application/vnd.docker.image",
+      "group": "myorg",
+      "version": "$IMAGE_TAG",
+      "hashes": [{ "alg": "SHA-256", "content": "$IMAGE_DIGEST" }],
+      "reference": "registry.example.com/myorg/my-app-backend:$IMAGE_TAG"
+    }
     EOF
 ```
 
-**GitLab CI:**
+**GitLab CI (Docker):**
 ```yaml
 build:
   script:
     - docker build -t $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA .
     - docker push $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA
     - IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA | cut -d'@' -f2 | cut -d':' -f2)
-    - echo "{\"hashes\":[{\"alg\":\"SHA-256\",\"content\":\"$IMAGE_DIGEST\"}]}" > ci-output/my-app-backend-meta.json
+    - |
+      cat > ci-output/my-app-backend-meta.json << EOF
+      {
+        "name": "my-app-backend",
+        "type": "container",
+        "mime-type": "application/vnd.docker.image",
+        "group": "myorg",
+        "version": "$CI_COMMIT_SHORT_SHA",
+        "hashes": [{ "alg": "SHA-256", "content": "$IMAGE_DIGEST" }],
+        "reference": "$CI_REGISTRY_IMAGE/my-app-backend:$CI_COMMIT_SHORT_SHA"
+      }
+      EOF
 ```
 
 > **Important**: `name` and `mime-type` in this file must exactly match the corresponding
