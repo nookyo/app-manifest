@@ -39,10 +39,40 @@ Your CI pipeline must produce one JSON file per built component and pass it to t
 
 #### Who creates this file?
 
-The CI metadata JSON is created by your CI system — typically a build script or pipeline step
-that runs after `docker push` or `helm push`. It captures what was just built and pushed.
+The CI metadata JSON must be produced by the CI job that builds and pushes the artifact.
+The field values must come from the actual build job output — **not invented or hardcoded**.
+A wrong digest or version will produce an invalid manifest that the deployment tooling cannot use.
 
-You are responsible for writing this file in your CI pipeline in the format described below.
+There are two scenarios depending on which actions your CI uses:
+
+**Option A — Qubership reusable actions (metadata generated automatically)**
+
+If you use the Netcracker/qubership-workflow-hub actions for building Docker images or Helm charts,
+the metadata JSON is produced automatically at the end of the build job.
+The action outputs `metadata_path` and `metadata-filename` pointing to the generated file —
+you only need to upload it as a CI artifact and pass it to `am component`.
+
+- Docker: [`docker-action`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/actions/docker-action)
+- Helm: [`charts-values-update-action`](https://github.com/Netcracker/qubership-workflow-hub/tree/main/actions/charts-values-update-action) — includes `chart-metadata.sh` that generates the metadata JSON from the packaged `.tgz`
+
+**Option B — Standard actions (you write the JSON yourself)**
+
+If you use standard actions such as `docker/build-push-action` (GitHub Actions) or
+`docker build && docker push` / `helm package && helm push` (GitLab CI), you must add
+a step at the end of the build job that reads the values from action outputs or CI
+environment variables and writes the JSON file in the format below.
+
+The correct values come from:
+
+| Field       | Source                                                                     |
+| ----------- | -------------------------------------------------------------------------- |
+| `version`   | The image/chart tag set in the build job (e.g. `$CI_COMMIT_SHORT_SHA`)     |
+| `hashes`    | The SHA-256 digest returned by the push action or `docker inspect`         |
+| `reference` | The full image/chart address pushed to (registry + namespace + name + tag) |
+| `name`      | Set by you — must match `name` in `build-config.yaml`                      |
+
+See [Getting Started — Step 2](getting-started.md#step-2-set-up-ci-to-produce-metadata-json)
+for concrete GitHub Actions and GitLab CI examples.
 See [fixture examples](../tests/fixtures/metadata/) for real files.
 
 #### Docker image
@@ -126,17 +156,17 @@ Includes nested components embedded in the chart archive
 
 #### Field reference
 
-| Field        | Required | Description                                                                    |
-| ------------ | -------- | ------------------------------------------------------------------------------ |
-| `name`       | yes      | Component name — must match `name` in `build-config.yaml`                      |
-| `type`       | yes      | CycloneDX type: `container` for Docker images, `application` for Helm/other    |
-| `mime-type`  | yes      | Component mime-type — must match `mimeType` in `build-config.yaml`             |
-| `group`      | no       | Registry namespace or organisation (e.g. `core`, `envoyproxy`)                 |
-| `version`    | no       | Image tag or chart version                                                     |
-| `hashes`     | no       | List of `{ "alg": "SHA-256", "content": "<hex>" }` objects                     |
-| `reference`  | no       | Full address in the registry, used for PURL generation                         |
-| `appVersion` | no       | Helm only: application version (may differ from chart version)                 |
-| `components` | no       | Helm only: nested components (values.schema.json, resource profiles)           |
+| Field        | Required | Description                                                                 |
+| ------------ | -------- | --------------------------------------------------------------------------- |
+| `name`       | yes      | Component name — must match `name` in `build-config.yaml`                   |
+| `type`       | yes      | CycloneDX type: `container` for Docker images, `application` for Helm/other |
+| `mime-type`  | yes      | Component mime-type — must match `mimeType` in `build-config.yaml`          |
+| `group`      | no       | Registry namespace or organisation (e.g. `core`, `envoyproxy`)              |
+| `version`    | no       | Image tag or chart version                                                  |
+| `hashes`     | no       | List of `{ "alg": "SHA-256", "content": "<hex>" }` objects                  |
+| `reference`  | no       | Full address in the registry, used for PURL generation                      |
+| `appVersion` | no       | Helm only: application version (may differ from chart version)              |
+| `components` | no       | Helm only: nested components (values.schema.json, resource profiles)        |
 
 Supported hash algorithms: `MD5`, `SHA-1`, `SHA-256`, `SHA-512`.
 
@@ -201,15 +231,15 @@ Components without `reference` are skipped silently.
 
 **What is extracted from a Helm chart:**
 
-| Data                 | Source                       | Written to                                        |
-| -------------------- | ---------------------------- | ------------------------------------------------- |
-| Chart name           | `Chart.yaml` — `name`        | `component.name`                                  |
-| Application version  | `Chart.yaml` — `appVersion`  | `component.version`                               |
-| Chart version        | `Chart.yaml` — `version`     | `component.version` (fallback if no `appVersion`) |
-| SHA-256 hash         | `.tgz` archive               | `component.hashes[0]`                             |
-| PURL                 | `reference` + regdef         | `component.purl`                                  |
-| `values.schema.json` | Chart root directory         | Nested component (base64-encoded)                 |
-| Resource profiles    | `resource-profiles/*.yaml`   | Nested component (base64-encoded)                 |
+| Data                 | Source                      | Written to                                        |
+| -------------------- | --------------------------- | ------------------------------------------------- |
+| Chart name           | `Chart.yaml` — `name`       | `component.name`                                  |
+| Application version  | `Chart.yaml` — `appVersion` | `component.version`                               |
+| Chart version        | `Chart.yaml` — `version`    | `component.version` (fallback if no `appVersion`) |
+| SHA-256 hash         | `.tgz` archive              | `component.hashes[0]`                             |
+| PURL                 | `reference` + regdef        | `component.purl`                                  |
+| `values.schema.json` | Chart root directory        | Nested component (base64-encoded)                 |
+| Resource profiles    | `resource-profiles/*.yaml`  | Nested component (base64-encoded)                 |
 
 ### Output file naming
 
