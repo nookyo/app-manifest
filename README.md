@@ -70,7 +70,7 @@ for exactly one component. Mini-manifests are not the final output; they are con
 ```
 
 **Step 1 — `am component`**
-For each image built in CI, convert the metadata JSON into a mini-manifest:
+For each image/charts built in CI, convert the metadata JSON into a mini-manifest:
 
 ```bash
 am component -i ci/jaeger-meta.json -o minis/jaeger.json
