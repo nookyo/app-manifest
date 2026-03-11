@@ -1,7 +1,7 @@
-"""Тесты для сборщика манифеста.
+"""Tests for the manifest builder.
 
-В новой архитектуре generate принимает мини-манифесты (CdxComponent),
-а не сырые CI метаданные.
+In the current architecture generate accepts mini-manifests (CdxComponent),
+not raw CI metadata.
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _make_mini_manifests(metadata_files, regdef=None):
-    """Создать dict мини-манифестов из metadata-файлов."""
+    """Build a dict of mini-manifests from metadata files."""
     result = {}
     for path in metadata_files:
         meta = load_component_metadata(path)
@@ -28,7 +28,7 @@ def _make_mini_manifests(metadata_files, regdef=None):
 
 
 class TestBuildManifestMinimal:
-    """Тесты на минимальном конфиге (jaeger-подобном)."""
+    """Tests with a minimal config (jaeger-like)."""
 
     def _build(self):
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
@@ -42,7 +42,7 @@ class TestBuildManifestMinimal:
         return bom
 
     def test_bom_root_fields(self):
-        """Корневые поля BOM."""
+        """Root BOM fields."""
         bom = self._build()
         assert bom.bom_format == "CycloneDX"
         assert bom.spec_version == "1.6"
@@ -50,7 +50,7 @@ class TestBuildManifestMinimal:
         assert bom.serial_number.startswith("urn:uuid:")
 
     def test_metadata(self):
-        """Metadata секция."""
+        """Metadata section."""
         bom = self._build()
         assert bom.metadata.component.name == "qubership-jaeger"
         assert bom.metadata.component.version == "1.2.3"
@@ -59,13 +59,13 @@ class TestBuildManifestMinimal:
         assert bom.metadata.tools.components[0].name == "am-build-cli"
 
     def test_components_count(self):
-        """Количество компонентов из конфига."""
+        """Number of components from config."""
         bom = self._build()
         # minimal_config.yaml: standalone + helm + 2 docker = 4
         assert len(bom.components) == 4
 
     def test_standalone_component(self):
-        """Standalone-runnable компонент."""
+        """Standalone-runnable component."""
         bom = self._build()
         standalone = bom.components[0]
         assert standalone.type == "application"
@@ -75,7 +75,7 @@ class TestBuildManifestMinimal:
         assert standalone.components == []
 
     def test_docker_component(self):
-        """Docker-образ из мини-манифеста."""
+        """Docker image taken from a mini-manifest."""
         bom = self._build()
         docker_comps = [c for c in bom.components if c.type == "container"]
         jaeger = next(c for c in docker_comps if c.name == "jaeger")
@@ -90,16 +90,17 @@ class TestBuildManifestMinimal:
         assert len(jaeger.hashes) == 1
 
     def test_docker_purl_from_mini_manifest(self):
-        """PURL берётся из мини-манифеста как есть."""
+        """PURL is taken from the mini-manifest as-is."""
         bom = self._build()
         docker_comps = [c for c in bom.components if c.type == "container"]
         jaeger = next(c for c in docker_comps if c.name == "jaeger")
 
+        assert jaeger.purl is not None
         assert "jaeger" in jaeger.purl
         assert "build3" in jaeger.purl
 
     def test_envoy_from_mini_manifest(self):
-        """Envoy из мини-манифеста."""
+        """Envoy taken from a mini-manifest."""
         bom = self._build()
         docker_comps = [c for c in bom.components if c.type == "container"]
         envoy = next(c for c in docker_comps if c.name == "envoy")
@@ -109,7 +110,7 @@ class TestBuildManifestMinimal:
         assert "envoy" in envoy.purl
 
     def test_dependencies_app_depends_on_all(self):
-        """Приложение зависит от всех компонентов."""
+        """The application depends on all components."""
         bom = self._build()
         app_dep = bom.dependencies[0]
 
@@ -117,7 +118,7 @@ class TestBuildManifestMinimal:
         assert len(app_dep.depends_on) == 4
 
     def test_dependencies_standalone_depends_on_helm(self):
-        """Standalone зависит от helm (из dependsOn в YAML)."""
+        """Standalone depends on helm (from dependsOn in YAML)."""
         bom = self._build()
         standalone_ref = bom.components[0].bom_ref
 
@@ -128,7 +129,7 @@ class TestBuildManifestMinimal:
         assert len(standalone_dep.depends_on) == 1
 
     def test_dependencies_helm_depends_on_docker(self):
-        """Helm зависит от Docker-образов (из dependsOn в YAML)."""
+        """Helm depends on Docker images (from dependsOn in YAML)."""
         bom = self._build()
         helm_ref = bom.components[1].bom_ref
 
@@ -140,7 +141,7 @@ class TestBuildManifestMinimal:
 
 
 class TestHelmComponent:
-    """Тесты для Helm-чарт компонента."""
+    """Tests for a Helm chart component."""
 
     def _build(self):
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
@@ -161,35 +162,37 @@ class TestHelmComponent:
         )
 
     def test_helm_basic_fields(self):
-        """Helm: type, mime-type, name."""
+        """Helm: type, mime-type, and name fields."""
         helm = self._helm_comp()
         assert helm.type == "application"
         assert helm.mime_type == "application/vnd.nc.helm.chart"
         assert helm.name == "qubership-jaeger"
 
     def test_helm_version(self):
-        """Version из мини-манифеста."""
+        """Version taken from the mini-manifest."""
         helm = self._helm_comp()
         assert helm.version == "1.2.3"
 
     def test_helm_purl(self):
-        """PURL из мини-манифеста."""
+        """PURL taken from the mini-manifest."""
         helm = self._helm_comp()
         assert helm.purl is not None
         assert "pkg:helm/" in helm.purl
         assert "qubership-jaeger" in helm.purl
 
     def test_helm_is_library_property(self):
-        """isLibrary property добавляется в generate."""
+        """isLibrary property is added by generate."""
         helm = self._helm_comp()
+        assert helm.properties is not None
         is_library = next(
             p for p in helm.properties if p.name == "isLibrary"
         )
         assert is_library.value is False
 
     def test_helm_artifact_mappings(self):
-        """artifactMappings маппинг Docker→valuesPathPrefix."""
+        """artifactMappings maps Docker → valuesPathPrefix."""
         helm = self._helm_comp()
+        assert helm.properties is not None
         mappings_prop = next(
             (p for p in helm.properties
              if p.name == "qubership:helm.values.artifactMappings"),
@@ -203,12 +206,13 @@ class TestHelmComponent:
         assert "images.envoy" in prefixes
 
     def test_helm_artifact_mappings_keys_are_bom_refs(self):
-        """Ключи artifactMappings — bom-ref Docker-компонентов."""
+        """Keys in artifactMappings are bom-refs of Docker components."""
         bom = self._build()
         helm = next(
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert helm.properties is not None
         mappings_prop = next(
             p for p in helm.properties
             if p.name == "qubership:helm.values.artifactMappings"
@@ -221,7 +225,7 @@ class TestHelmComponent:
             assert key in docker_refs, f"Key {key} is not a Docker bom-ref"
 
     def test_helm_nested_values_schema(self):
-        """Вложенный компонент values.schema.json."""
+        """Nested component values.schema.json."""
         helm = self._helm_comp()
         assert helm.components is not None
         assert len(helm.components) >= 1
@@ -239,8 +243,9 @@ class TestHelmComponent:
         assert schema_comp.data[0].contents.attachment.encoding == "base64"
 
     def test_helm_nested_resource_profiles(self):
-        """Вложенный компонент resource-profile-baselines."""
+        """Nested component resource-profile-baselines."""
         helm = self._helm_comp()
+        assert helm.components is not None
         profiles_comp = next(
             (c for c in helm.components if c.name == "resource-profile-baselines"),
             None,
@@ -252,14 +257,14 @@ class TestHelmComponent:
         assert len(profiles_comp.data) == 2
 
     def test_helm_hashes(self):
-        """Хеши из мини-манифеста."""
+        """Hashes taken from the mini-manifest."""
         helm = self._helm_comp()
         assert helm.hashes is not None
         assert len(helm.hashes) == 1
         assert helm.hashes[0].alg == "SHA-256"
 
     def test_helm_without_mini_manifest(self):
-        """Helm без мини-манифеста — пропускается."""
+        """Helm without a mini-manifest — skipped."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
         bom, _ = build_manifest(config, {})
         helm_comps = [
@@ -269,15 +274,15 @@ class TestHelmComponent:
         assert len(helm_comps) == 0
 
     def test_missing_mini_manifest_produces_warning(self):
-        """Если мини-манифест не найден — возвращается warning."""
+        """If a mini-manifest is not found — a warning is returned."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
         _, warnings = build_manifest(config, {})
-        # В конфиге есть helm-chart — он не найдет мини-манифест
+        # Config has a helm-chart — it will not find a mini-manifest
         assert any("not found in mini-manifests" in w for w in warnings)
         assert any("qubership-jaeger" in w for w in warnings)
 
     def test_helm_serialization(self):
-        """Helm-компонент корректно сериализуется в JSON."""
+        """Helm component serializes correctly to JSON."""
         bom = self._build()
         data = bom.model_dump(by_alias=True, exclude_none=True)
         helm_data = next(
@@ -291,7 +296,7 @@ class TestHelmComponent:
         assert len(helm_data["components"]) == 2
 
     def test_bom_ref_regenerated(self):
-        """bom-ref перегенерируется в generate (вариант Б)."""
+        """bom-ref is regenerated by generate (option B)."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         mini = _make_mini_manifests([
@@ -314,7 +319,7 @@ class TestHelmComponent:
 
 
 class TestBuildManifestOverrides:
-    """Тесты для переопределения version и name."""
+    """Tests for version and name overrides."""
 
     def test_version_override(self):
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
@@ -334,7 +339,7 @@ class TestBuildManifestOverrides:
 
 
 class TestUmbrellaHelm:
-    """Тесты для umbrella (app-chart) паттерна — QIP."""
+    """Tests for the umbrella (app-chart) pattern — QIP."""
 
     def _build(self):
         config = load_build_config(FIXTURES / "configs/qip_config.yaml")
@@ -348,38 +353,41 @@ class TestUmbrellaHelm:
         return bom
 
     def test_top_level_components_count(self):
-        """Top-level: standalone + app-chart + 2 docker = 4 (sub-charts НЕ на верхнем уровне)."""
+        """Top-level: standalone + app-chart + 2 docker = 4 (sub-charts are NOT at the top level)."""
         bom = self._build()
         assert len(bom.components) == 4
 
     def test_sub_charts_not_at_top_level(self):
-        """Sub-chart'ы (qip-engine, qip-runtime-catalog) НЕ на верхнем уровне."""
+        """Sub-charts (qip-engine, qip-runtime-catalog) are NOT at the top level."""
         bom = self._build()
         top_names = [(c.name, c.mime_type) for c in bom.components]
         assert ("qip-engine", "application/vnd.nc.helm.chart") not in top_names
         assert ("qip-runtime-catalog", "application/vnd.nc.helm.chart") not in top_names
 
     def test_sub_charts_nested_in_app_chart(self):
-        """Sub-chart'ы вложены внутрь app-chart."""
+        """Sub-charts are nested inside the app-chart."""
         bom = self._build()
         app_chart = next(
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert app_chart.components is not None
         nested_names = [c.name for c in app_chart.components]
         assert "qip-engine" in nested_names
         assert "qip-runtime-catalog" in nested_names
 
     def test_sub_chart_has_artifact_mapping(self):
-        """Каждый sub-chart имеет свой artifactMapping."""
+        """Each sub-chart has its own artifactMapping."""
         bom = self._build()
         app_chart = next(
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert app_chart.components is not None
         for sub in app_chart.components:
             if sub.mime_type != "application/vnd.nc.helm.chart":
                 continue
+            assert sub.properties is not None
             mappings_prop = next(
                 (p for p in sub.properties
                  if p.name == "qubership:helm.values.artifactMappings"),
@@ -389,7 +397,7 @@ class TestUmbrellaHelm:
             assert len(mappings_prop.value) == 1
 
     def test_sub_chart_artifact_mapping_keys_are_docker_refs(self):
-        """Ключи artifactMappings sub-chart'ов — bom-ref Docker-компонентов."""
+        """Keys in sub-chart artifactMappings are bom-refs of Docker components."""
         bom = self._build()
         docker_refs = {
             c.bom_ref for c in bom.components if c.type == "container"
@@ -398,9 +406,11 @@ class TestUmbrellaHelm:
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert app_chart.components is not None
         for sub in app_chart.components:
             if sub.mime_type != "application/vnd.nc.helm.chart":
                 continue
+            assert sub.properties is not None
             mappings_prop = next(
                 p for p in sub.properties
                 if p.name == "qubership:helm.values.artifactMappings"
@@ -409,12 +419,13 @@ class TestUmbrellaHelm:
                 assert key in docker_refs
 
     def test_app_chart_no_artifact_mappings(self):
-        """App-chart (umbrella) не имеет artifactMappings (его deps — sub-charts, не docker)."""
+        """App-chart (umbrella) has no artifactMappings (its deps are sub-charts, not docker)."""
         bom = self._build()
         app_chart = next(
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert app_chart.properties is not None
         mappings_prop = next(
             (p for p in app_chart.properties
              if p.name == "qubership:helm.values.artifactMappings"),
@@ -423,7 +434,7 @@ class TestUmbrellaHelm:
         assert mappings_prop is None
 
     def test_standalone_depends_on_app_chart(self):
-        """Standalone зависит от app-chart."""
+        """Standalone depends on the app-chart."""
         bom = self._build()
         standalone = next(
             c for c in bom.components
@@ -439,7 +450,7 @@ class TestUmbrellaHelm:
         assert app_chart.bom_ref in standalone_dep.depends_on
 
     def test_sub_chart_depends_on_docker(self):
-        """Sub-chart → docker image в dependencies."""
+        """Sub-chart → docker image in dependencies."""
         bom = self._build()
         app_chart = next(
             c for c in bom.components
@@ -448,6 +459,7 @@ class TestUmbrellaHelm:
         docker_refs = {
             c.bom_ref for c in bom.components if c.type == "container"
         }
+        assert app_chart.components is not None
         for sub in app_chart.components:
             if sub.mime_type != "application/vnd.nc.helm.chart":
                 continue
@@ -460,7 +472,7 @@ class TestUmbrellaHelm:
                 assert ref in docker_refs
 
     def test_metadata_depends_on_top_level_only(self):
-        """Metadata (app) зависит только от top-level компонентов."""
+        """Metadata (app) depends only on top-level components."""
         bom = self._build()
         app_dep = bom.dependencies[0]
         assert app_dep.ref == bom.metadata.component.bom_ref
@@ -468,20 +480,22 @@ class TestUmbrellaHelm:
         assert len(app_dep.depends_on) == 4
 
     def test_sub_chart_is_library_false(self):
-        """Sub-chart'ы имеют isLibrary=false."""
+        """Sub-charts have isLibrary=false."""
         bom = self._build()
         app_chart = next(
             c for c in bom.components
             if c.mime_type == "application/vnd.nc.helm.chart"
         )
+        assert app_chart.components is not None
         for sub in app_chart.components:
             if sub.mime_type != "application/vnd.nc.helm.chart":
                 continue
+            assert sub.properties is not None
             is_lib = next(p for p in sub.properties if p.name == "isLibrary")
             assert is_lib.value is False
 
     def test_serialization(self):
-        """Umbrella манифест корректно сериализуется."""
+        """Umbrella manifest serializes correctly."""
         bom = self._build()
         data = bom.model_dump(by_alias=True, exclude_none=True)
         app_chart = next(

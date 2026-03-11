@@ -35,10 +35,10 @@ from app_manifest.models.cyclonedx import (
 _DOCKER_TYPES = {MimeType.DOCKER_IMAGE}
 
 # MimeTypes treated as standalone-runnable
-_STANDALONE_TYPES = {MimeType.STANDALONE_RUNNABLE, MimeType.Q_STANDALONE_RUNNABLE}
+_STANDALONE_TYPES = {MimeType.STANDALONE_RUNNABLE}
 
 # MimeTypes treated as Helm charts
-_HELM_TYPES = {MimeType.HELM_CHART, MimeType.Q_HELM_CHART}
+_HELM_TYPES = {MimeType.HELM_CHART}
 
 
 def build_manifest(

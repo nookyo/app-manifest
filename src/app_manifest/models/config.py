@@ -18,7 +18,6 @@ class MimeType(str, Enum):
     mimeType: "invalid-type" — Pydantic will raise an error.
     """
 
-    # nc-variant (from the spec)
     STANDALONE_RUNNABLE = "application/vnd.nc.standalone-runnable"
     DOCKER_IMAGE = "application/vnd.docker.image"
     HELM_CHART = "application/vnd.nc.helm.chart"
@@ -27,15 +26,6 @@ class MimeType(str, Enum):
     CDN = "application/vnd.nc.cdn"
     CRD = "application/vnd.nc.crd"
     JOB = "application/vnd.nc.job"
-
-    # qubership-variant (from real-world usage)
-    Q_STANDALONE_RUNNABLE = "application/vnd.qubership.standalone-runnable"
-    Q_HELM_CHART = "application/vnd.qubership.helm.chart"
-    Q_SMARTPLUG = "application/vnd.qubership.smartplug"
-    Q_SAMPLEREPO = "application/vnd.qubership.samplerepo"
-    Q_CDN = "application/vnd.qubership.cdn"
-    Q_CRD = "application/vnd.qubership.crd"
-    Q_JOB = "application/vnd.qubership.job"
 
 
 class DependencyConfig(BaseModel):

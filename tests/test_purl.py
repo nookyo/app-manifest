@@ -1,4 +1,4 @@
-"""Тесты для PURL генератора и Registry Definition."""
+"""Tests for the PURL generator and Registry Definition."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class TestHostsMatch:
-    """Тесты для сопоставления хостов."""
+    """Tests for host matching."""
 
     def test_exact_match(self):
         assert _hosts_match("ghcr.io", "ghcr.io") is True
@@ -28,7 +28,7 @@ class TestHostsMatch:
 
 
 class TestNamespaceMatches:
-    """Тесты для сопоставления namespace с groupName."""
+    """Tests for matching a namespace against groupName."""
 
     def test_exact_match(self):
         assert _namespace_matches("netcracker", "netcracker") is True
@@ -40,27 +40,30 @@ class TestNamespaceMatches:
         assert _namespace_matches("other-org", "netcracker") is False
 
     def test_similar_prefix_no_match(self):
-        """netcracker-fork не должен совпадать с netcracker."""
+        """netcracker-fork must not match netcracker."""
         assert _namespace_matches("netcracker-fork", "netcracker") is False
 
 
 class TestRegistryDefinition:
-    """Тесты для загрузки Registry Definition."""
+    """Tests for loading Registry Definition."""
 
     def test_load_qubership(self):
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         assert regdef.name == "qubership"
+        assert regdef.docker_config is not None
         assert regdef.docker_config.group_uri == "ghcr.io"
+        assert regdef.helm_app_config is not None
         assert regdef.helm_app_config.repository_domain_name == "oci://registry.qubership.org"
 
     def test_load_sandbox(self):
         regdef = load_registry_definition(FIXTURES / "regdefs/sandbox_regdef.yml")
         assert regdef.name == "sandbox"
+        assert regdef.docker_config is not None
         assert regdef.docker_config.group_uri == "123456789.dkr.ecr.eu-west-1.amazonaws.com"
 
 
 class TestDockerPurl:
-    """Тесты для генерации Docker PURL."""
+    """Tests for Docker PURL generation."""
 
     def test_ghcr_with_regdef(self):
         """ghcr.io → registry_name=qubership."""
@@ -69,18 +72,18 @@ class TestDockerPurl:
         assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_name=qubership"
 
     def test_docker_hub(self):
-        """docker.io с namespace — regdef не совпадает, fallback на хост."""
+        """docker.io with namespace — regdef does not match, falls back to host."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_docker_purl("docker.io/envoyproxy/envoy:v1.32.6", regdef)
         assert purl == "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
 
     def test_docker_hub_short(self):
-        """Короткий формат docker.io — два сегмента."""
+        """Short docker.io format — two segments."""
         purl = make_docker_purl("docker.io/openjdk:11")
         assert purl == "pkg:docker/openjdk@11?registry_name=docker.io"
 
     def test_aws_ecr_with_regdef(self):
-        """AWS ECR → registry_name=sandbox (namespace совпадает с groupName)."""
+        """AWS ECR → registry_name=sandbox (namespace matches groupName)."""
         regdef = load_registry_definition(FIXTURES / "regdefs/sandbox_regdef.yml")
         purl = make_docker_purl(
             "123456789.dkr.ecr.eu-west-1.amazonaws.com/docker/jaeger:build3",
@@ -89,7 +92,7 @@ class TestDockerPurl:
         assert purl == "pkg:docker/docker/jaeger@build3?registry_name=sandbox"
 
     def test_aws_ecr_namespace_mismatch(self):
-        """AWS ECR с чужим namespace — fallback на хост."""
+        """AWS ECR with an unrecognized namespace — falls back to host."""
         regdef = load_registry_definition(FIXTURES / "regdefs/sandbox_regdef.yml")
         purl = make_docker_purl(
             "123456789.dkr.ecr.eu-west-1.amazonaws.com/other-org/jaeger:build3",
@@ -98,19 +101,19 @@ class TestDockerPurl:
         assert purl == "pkg:docker/other-org/jaeger@build3?registry_name=123456789.dkr.ecr.eu-west-1.amazonaws.com"
 
     def test_without_regdef(self):
-        """Без regdef — registry_name = хост."""
+        """Without regdef — registry_name equals the host."""
         purl = make_docker_purl("ghcr.io/netcracker/jaeger:1.0")
         assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_name=ghcr.io"
 
     def test_deep_namespace(self):
-        """Глубокий namespace: registry/a/b/c/image:tag."""
+        """Deep namespace: registry/a/b/c/image:tag."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_docker_purl("ghcr.io/netcracker/team/sub/image:v2", regdef)
         assert purl == "pkg:docker/netcracker/team/sub/image@v2?registry_name=qubership"
 
 
 class TestHelmPurl:
-    """Тесты для генерации Helm PURL."""
+    """Tests for Helm PURL generation."""
 
     def test_oci_with_regdef(self):
         """OCI Helm → registry_name=qubership."""
@@ -119,12 +122,12 @@ class TestHelmPurl:
         assert purl == "pkg:helm/charts/my-chart@1.0?registry_name=qubership"
 
     def test_without_regdef(self):
-        """Без regdef — registry_name = хост."""
+        """Without regdef — registry_name equals the host."""
         purl = make_helm_purl("oci://registry.example.com/repo/chart:2.0")
         assert purl == "pkg:helm/repo/chart@2.0?registry_name=registry.example.com"
 
     def test_https_helm(self):
-        """HTTPS Helm reference."""
+        """HTTPS Helm reference format."""
         regdef = load_registry_definition(FIXTURES / "regdefs/sandbox_regdef.yml")
         purl = make_helm_purl(
             "https://nexus.mycompany.internal/repository/helm-charts/my-chart:3.0",

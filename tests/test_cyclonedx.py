@@ -1,7 +1,7 @@
-"""Тесты для моделей выходного CycloneDX JSON.
+"""Tests for the CycloneDX output JSON models.
 
-Проверяем что модели при сериализации (model_dump) выдают JSON
-с правильными именами полей — как требует спецификация.
+Verifies that models produce correct field names on serialization (model_dump)
+as required by the specification.
 """
 
 from app_manifest.models.cyclonedx import (
@@ -19,28 +19,28 @@ from app_manifest.models.cyclonedx import (
 
 
 class TestBomRef:
-    """Тесты для генерации bom-ref."""
+    """Tests for bom-ref generation."""
 
     def test_format(self):
-        """bom-ref должен быть в формате name:uuid."""
+        """bom-ref must follow the name:uuid format."""
         ref = _make_bom_ref("my-app")
         assert ref.startswith("my-app:")
-        # После двоеточия — UUID (36 символов с дефисами)
+        # Part after colon must be a UUID (36 chars with dashes)
         uuid_part = ref.split(":")[1]
         assert len(uuid_part) == 36
 
     def test_unique(self):
-        """Каждый вызов генерирует уникальный bom-ref."""
+        """Each call produces a unique bom-ref."""
         ref1 = _make_bom_ref("app")
         ref2 = _make_bom_ref("app")
         assert ref1 != ref2
 
 
 class TestCdxComponent:
-    """Тесты для модели компонента."""
+    """Tests for the component model."""
 
     def test_docker_image_serialization(self):
-        """Docker-образ сериализуется с правильными ключами JSON."""
+        """Docker image serializes with correct JSON keys."""
         comp = CdxComponent(
             bom_ref="jaeger:aaa-bbb",
             type="container",
@@ -52,7 +52,6 @@ class TestCdxComponent:
         )
         data = comp.model_dump(by_alias=True, exclude_none=True)
 
-        # Проверяем что ключи в JSON правильные (с дефисами)
         assert data["bom-ref"] == "jaeger:aaa-bbb"
         assert data["mime-type"] == "application/vnd.docker.image"
         assert data["type"] == "container"
@@ -62,7 +61,7 @@ class TestCdxComponent:
         assert data["purl"] == "pkg:docker/core/jaeger@build3?registry_name=sandbox"
 
     def test_minimal_component(self):
-        """Компонент с минимумом полей — только обязательные по схеме."""
+        """Component with minimal fields — only required by schema."""
         comp = CdxComponent(
             bom_ref="app:123",
             type="application",
@@ -75,13 +74,13 @@ class TestCdxComponent:
         assert "type" in data
         assert "mime-type" in data
         assert "name" in data
-        # Опциональные поля не должны быть в JSON
+        # Optional fields must not appear in JSON
         assert "version" not in data
         assert "group" not in data
         assert "purl" not in data
 
     def test_component_with_properties(self):
-        """Компонент со свойствами."""
+        """Component with properties."""
         comp = CdxComponent(
             bom_ref="chart:123",
             type="application",
@@ -96,7 +95,7 @@ class TestCdxComponent:
         assert data["properties"][0]["value"] is False
 
     def test_component_with_hashes(self):
-        """Компонент с хешами."""
+        """Component with hashes."""
         comp = CdxComponent(
             bom_ref="img:123",
             type="container",
@@ -108,7 +107,7 @@ class TestCdxComponent:
         assert data["hashes"][0] == {"alg": "SHA-256", "content": "abc123"}
 
     def test_empty_lists_included_when_set(self):
-        """Пустые списки properties/components включаются если заданы явно."""
+        """Empty properties/components lists are included when explicitly set."""
         comp = CdxComponent(
             bom_ref="app:123",
             type="application",
@@ -123,10 +122,10 @@ class TestCdxComponent:
 
 
 class TestCdxDependency:
-    """Тесты для модели зависимости."""
+    """Tests for the dependency model."""
 
     def test_serialization(self):
-        """dependsOn сериализуется в camelCase."""
+        """dependsOn serializes in camelCase."""
         dep = CdxDependency(
             ref="app:123",
             depends_on=["chart:456", "docker:789"],
@@ -136,17 +135,17 @@ class TestCdxDependency:
         assert data["dependsOn"] == ["chart:456", "docker:789"]
 
     def test_empty_depends_on(self):
-        """Компонент без зависимостей."""
+        """Component with no dependencies."""
         dep = CdxDependency(ref="leaf:123")
         data = dep.model_dump(by_alias=True)
         assert data["dependsOn"] == []
 
 
 class TestCycloneDxBom:
-    """Тесты для корневой модели BOM."""
+    """Tests for the root BOM model."""
 
     def _make_minimal_bom(self) -> CycloneDxBom:
-        """Создать минимальный BOM для тестов."""
+        """Create a minimal BOM for tests."""
         return CycloneDxBom(
             metadata=CdxMetadata(
                 timestamp="2025-01-21T12:00:00Z",
@@ -164,7 +163,7 @@ class TestCycloneDxBom:
         )
 
     def test_root_fields(self):
-        """Корневые поля BOM сериализуются правильно."""
+        """Root BOM fields serialize correctly."""
         bom = self._make_minimal_bom()
         data = bom.model_dump(by_alias=True)
 
@@ -175,7 +174,7 @@ class TestCycloneDxBom:
         assert data["$schema"] == "../schemas/application-manifest.schema.json"
 
     def test_metadata_structure(self):
-        """Секция metadata имеет правильную структуру."""
+        """metadata section has correct structure."""
         bom = self._make_minimal_bom()
         data = bom.model_dump(by_alias=True)
         meta = data["metadata"]
@@ -188,7 +187,7 @@ class TestCycloneDxBom:
         assert meta["component"]["version"] == "1.0.0"
 
     def test_tools_structure(self):
-        """Секция tools — объект с массивом components."""
+        """tools section is an object with a components array."""
         bom = self._make_minimal_bom()
         data = bom.model_dump(by_alias=True)
         tools = data["metadata"]["tools"]
@@ -199,7 +198,7 @@ class TestCycloneDxBom:
         assert tools["components"][0]["version"] == "0.1.0"
 
     def test_empty_components_and_dependencies(self):
-        """По умолчанию components и dependencies — пустые списки."""
+        """components and dependencies default to empty lists."""
         bom = self._make_minimal_bom()
         data = bom.model_dump(by_alias=True)
         assert data["components"] == []

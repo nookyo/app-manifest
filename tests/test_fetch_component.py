@@ -1,7 +1,7 @@
-"""Тесты для команды fetch и сервиса artifact_fetcher.
+"""Tests for the fetch command and the artifact_fetcher service.
 
-Реальный helm pull не вызывается — мокируем subprocess
-и создаём фейковый .tgz с Chart.yaml и values.schema.json.
+Real helm pull is not invoked — subprocess is mocked
+and a fake .tgz with Chart.yaml and values.schema.json is created.
 """
 
 import base64
@@ -29,7 +29,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def _create_fake_chart_tgz(dest_dir: Path, chart_name="my-chart", version="1.0.0",
                             app_version="1.0.0", with_schema=True,
                             with_profiles=True) -> Path:
-    """Создать фейковый .tgz Helm-чарта для тестов."""
+    """Create a fake Helm chart .tgz for tests."""
     import io
     import yaml
 
@@ -67,7 +67,7 @@ def _create_fake_chart_tgz(dest_dir: Path, chart_name="my-chart", version="1.0.0
 
 
 def _mock_helm_pull(reference, dest):
-    """Мок для helm pull — создаёт фейковый .tgz."""
+    """Mock for helm pull — creates a fake .tgz."""
     ref = reference.replace("oci://", "")
     parts = ref.split(":")
     version = parts[-1] if len(parts) > 1 else "1.0.0"
@@ -76,7 +76,7 @@ def _mock_helm_pull(reference, dest):
     _create_fake_chart_tgz(dest, chart_name=name, version=version, app_version=version)
 
 
-# ─── Тесты утилит ──────────────────────────────────────────
+# ─── Utility tests ──────────────────────────────────────────
 
 
 class TestComputeSha256:
@@ -107,6 +107,7 @@ class TestExtractNestedComponents:
         assert result[0].name == "values.schema.json"
         assert result[0].mime_type == "application/vnd.nc.helm.values.schema"
 
+        assert result[0].data is not None
         decoded = base64.b64decode(result[0].data[0].contents.attachment.content)
         assert json.loads(decoded) == {"type": "object"}
 
@@ -120,6 +121,7 @@ class TestExtractNestedComponents:
         result = _extract_nested_components(chart_dir)
         assert len(result) == 1
         assert result[0].name == "resource-profile-baselines"
+        assert result[0].data is not None
         assert len(result[0].data) == 2
 
     def test_both_schema_and_profiles(self, tmp_path):
@@ -154,12 +156,12 @@ class TestReadChartYaml:
         assert data["version"] == "1.0"
 
 
-# ─── Тесты fetch_helm_component с моком ────────────────────
+# ─── fetch_helm_component tests ────────────────────────────
 
 
 class TestFetchHelmComponent:
     def _mock_subprocess(self, reference, tmp_path):
-        """Замоканный subprocess.run для helm pull."""
+        """Mocked subprocess.run for helm pull."""
         def fake_run(cmd, **kwargs):
             dest = Path(cmd[cmd.index("--destination") + 1])
             _mock_helm_pull(reference, dest)
@@ -180,6 +182,7 @@ class TestFetchHelmComponent:
         assert comp.version == "1.0.0"
         assert comp.type == "application"
         assert comp.mime_type == "application/vnd.nc.helm.chart"
+        assert comp.purl is not None
         assert "pkg:helm/" in comp.purl
         assert comp.hashes is not None
 
@@ -205,6 +208,7 @@ class TestFetchHelmComponent:
             bom = fetch_helm_component(ref, regdef)
 
         comp = bom.components[0]
+        assert comp.purl is not None
         assert "registry_name=qubership" in comp.purl
 
     def test_helm_not_installed(self):
@@ -224,7 +228,7 @@ class TestFetchHelmComponent:
                 fetch_helm_component(ref)
 
 
-# ─── Тесты fetch_components_from_config ────────────────────
+# ─── fetch_components_from_config tests ────────────────────
 
 
 class TestFetchFromConfig:
@@ -235,7 +239,7 @@ class TestFetchFromConfig:
         return MagicMock(returncode=0, stderr="")
 
     def test_fetches_helm_and_docker_with_reference(self, tmp_path):
-        """fetch_components_from_config обрабатывает helm-чарты и docker-образы с reference."""
+        """fetch_components_from_config processes helm charts and docker images with a reference."""
         from app_manifest.services.config_loader import load_build_config
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
 
@@ -243,7 +247,7 @@ class TestFetchFromConfig:
             mock_run.side_effect = self._fake_run
             results = fetch_components_from_config(config)
 
-        # minimal_config.yaml: 1 helm + 2 docker (все с reference)
+        # minimal_config.yaml: 1 helm + 2 docker (all with reference)
         assert len(results) == 3
         names = [name for name, _ in results]
         assert "qubership-jaeger" in names
@@ -251,7 +255,7 @@ class TestFetchFromConfig:
         assert "envoy" in names
 
     def test_skips_components_without_reference(self, tmp_path):
-        """Компоненты без reference (standalone) не попадают в результат."""
+        """Components without reference (standalone) are not included in results."""
         from app_manifest.services.config_loader import load_build_config
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
 
@@ -259,9 +263,7 @@ class TestFetchFromConfig:
             mock_run.side_effect = self._fake_run
             results = fetch_components_from_config(config)
 
-        names = [name for name, _ in results]
-        assert "qubership-jaeger" in names  # helm + docker — оба в результатах
-        # standalone-runnable не имеет reference → пропущен
+        # standalone-runnable has no reference → skipped
         mime_types_of_standalones = [
             bom.components[0].mime_type
             for _, bom in results
@@ -270,7 +272,7 @@ class TestFetchFromConfig:
         assert mime_types_of_standalones == []
 
 
-# ─── Тесты CLI ─────────────────────────────────────────────
+# ─── CLI tests ─────────────────────────────────────────────
 
 
 class TestFetchCLI:
@@ -306,7 +308,7 @@ class TestFetchCLI:
             ])
 
         assert result.exit_code == 0, result.output
-        # Helm-чарт
+        # Helm chart
         helm_file = out_dir / "qubership-jaeger.json"
         assert helm_file.exists()
         with open(helm_file, encoding="utf-8") as f:
@@ -316,16 +318,16 @@ class TestFetchCLI:
         assert comp["name"] == "qubership-jaeger"
         assert "purl" in comp
 
-        # Docker-образы (из reference в конфиге)
+        # Docker images (from reference in config)
         assert (out_dir / "jaeger.json").exists()
         assert (out_dir / "envoy.json").exists()
         with open(out_dir / "envoy.json", encoding="utf-8") as f:
             envoy_data = json.load(f)
         assert envoy_data["components"][0]["name"] == "envoy"
-        assert "hashes" not in envoy_data["components"][0]  # нет хеша без скачивания
+        assert "hashes" not in envoy_data["components"][0]  # no hash without download
 
     def test_no_helm_references_in_config(self, tmp_path):
-        """Конфиг без helm reference — выводим сообщение, выходим 0."""
+        """Config with no references — print message, exit 0."""
         import yaml
         config_path = tmp_path / "empty_config.yaml"
         config_path.write_text(yaml.dump({
@@ -348,18 +350,18 @@ class TestFetchCLI:
         assert "No components with reference" in result.output
 
 
-# ─── Тесты исправлений ──────────────────────────────────────
+# ─── Fix: components[] in helm-chart always present ─────────
 
 
 class TestHelmComponentsFieldAlwaysPresent:
-    """Фикс: components[] в helm-chart всегда присутствует (даже пустой).
+    """Fix: components[] in helm-chart is always present (even when empty).
 
-    Без values.schema.json и resource-profiles поле не должно быть None,
-    иначе оно будет опущено при сериализации и манифест не пройдёт валидацию.
+    Without values.schema.json and resource-profiles the field must not be None,
+    otherwise it will be omitted on serialization and the manifest will fail validation.
     """
 
     def test_components_is_list_when_no_nested_artifacts(self, tmp_path):
-        """Чарт без values.schema.json и resource-profiles → components=[]."""
+        """Chart without values.schema.json and resource-profiles → components=[]."""
         ref = "oci://registry.example.com/charts/bare-chart:2.0.0"
 
         def fake_run(cmd, **kwargs):
@@ -377,7 +379,7 @@ class TestHelmComponentsFieldAlwaysPresent:
         assert comp.components == [], "components must be empty list, not None"
 
     def test_components_field_present_in_json_output(self, tmp_path):
-        """Сериализованный JSON содержит 'components': [] даже для пустого чарта."""
+        """Serialized JSON contains 'components': [] even for a bare chart."""
         ref = "oci://registry.example.com/charts/bare-chart:2.0.0"
 
         def fake_run(cmd, **kwargs):
@@ -396,11 +398,11 @@ class TestHelmComponentsFieldAlwaysPresent:
 
 
 class TestFetchDuplicateNameWarning:
-    """Фикс: при дублирующихся именах компонентов используется vendor-суффикс из mimeType."""
+    """Fix: duplicate component names use a vendor suffix from mimeType."""
 
     def test_duplicate_name_uses_vendor_suffix(self, tmp_path):
-        """Если два helm-компонента имеют одинаковый name — каждый получает
-        уникальное имя файла с вендор-суффиксом из mimeType, и в stderr warning."""
+        """Components with the same name but different mimeType each get a unique
+        filename with a vendor suffix derived from mimeType, and a warning in stderr."""
         import yaml
         config_path = tmp_path / "dup_config.yaml"
         config_path.write_text(yaml.dump({
@@ -414,8 +416,8 @@ class TestFetchDuplicateNameWarning:
                 },
                 {
                     "name": "my-chart",
-                    "mimeType": "application/vnd.qubership.helm.chart",
-                    "reference": "oci://registry.example.com/charts/other-chart:2.0.0",
+                    "mimeType": "application/vnd.docker.image",
+                    "reference": "docker.io/myorg/my-chart:1.0.0",
                 },
             ],
         }))
@@ -439,7 +441,7 @@ class TestFetchDuplicateNameWarning:
         assert result.exit_code == 0, result.output
         # Both files created with unique names based on full mime-type suffix
         assert (out_dir / "my-chart_vnd_nc_helm_chart.json").exists()
-        assert (out_dir / "my-chart_vnd_qubership_helm_chart.json").exists()
+        assert (out_dir / "my-chart_vnd_docker_image.json").exists()
         # No file without suffix
         assert not (out_dir / "my-chart.json").exists()
         # Warning in stderr
@@ -447,17 +449,17 @@ class TestFetchDuplicateNameWarning:
         assert "my-chart" in result.stderr
 
 
-# ─── Тесты Docker из reference ──────────────────────────────
+# ─── Docker from reference tests ────────────────────────────
 
 
 class TestFetchDockerFromReference:
-    """Тесты для fetch_docker_component_from_reference."""
+    """Tests for fetch_docker_component_from_reference."""
 
     def _make_docker_config(self, name: str, reference: str, mime_type: str = "application/vnd.docker.image"):
         from app_manifest.models.config import ComponentConfig, MimeType
         return ComponentConfig(
             name=name,
-            mime_type=MimeType(mime_type),
+            mimeType=MimeType(mime_type),
             reference=reference,
         )
 
@@ -467,28 +469,29 @@ class TestFetchDockerFromReference:
 
         assert len(bom.components) == 1
         c = bom.components[0]
-        assert c.name == "envoy"           # имя из конфига, не из reference
+        assert c.name == "envoy"           # name from config, not from reference
         assert c.version == "v1.32.6"
         assert c.group == "envoyproxy"
         assert c.type == "container"
         assert c.mime_type == "application/vnd.docker.image"
-        assert c.hashes is None            # хеш не известен без скачивания
+        assert c.hashes is None            # hash unknown without download
         assert c.purl is not None
         assert "envoyproxy/envoy" in c.purl
         assert "v1.32.6" in c.purl
 
     def test_name_comes_from_config_not_reference(self):
-        """name в компоненте берётся из конфига, а не из reference — чтобы generate мог сопоставить."""
+        """name in the component is taken from config, not from reference — so generate can match it."""
         comp = self._make_docker_config("my-service", "registry.example.com/team/actual-image-name:1.0")
         bom = fetch_docker_component_from_reference(comp)
 
-        assert bom.components[0].name == "my-service"  # из конфига
+        assert bom.components[0].name == "my-service"  # from config
 
     def test_purl_with_registry_host(self):
         comp = self._make_docker_config("jaeger", "sandbox.example.com/core/jaeger:build3")
         bom = fetch_docker_component_from_reference(comp)
 
         c = bom.components[0]
+        assert c.purl is not None
         assert "registry_name=sandbox.example.com" in c.purl
 
     def test_purl_with_regdef(self):
@@ -499,7 +502,8 @@ class TestFetchDockerFromReference:
         bom = fetch_docker_component_from_reference(comp, regdef)
 
         c = bom.components[0]
-        # registry_name должен быть именем из regdef, а не хостом
+        # registry_name must be the name from regdef, not the host
+        assert c.purl is not None
         assert "sandbox.example.com" not in c.purl or "registry_name=" in c.purl
 
     def test_valid_bom_structure(self):
@@ -512,7 +516,7 @@ class TestFetchDockerFromReference:
         assert bom.dependencies == []
 
     def test_serialization_no_hashes_field(self):
-        """Сериализованный JSON не содержит поле hashes (нет хеша)."""
+        """Serialized JSON does not contain the hashes field (no hash computed)."""
         comp = self._make_docker_config("envoy", "docker.io/envoyproxy/envoy:v1.32.6")
         bom = fetch_docker_component_from_reference(comp)
 

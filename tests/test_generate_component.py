@@ -1,4 +1,4 @@
-"""Тесты для команды component и сервиса component_builder."""
+"""Tests for the component command and component_builder service."""
 
 import json
 from pathlib import Path
@@ -13,14 +13,14 @@ from app_manifest.services.component_builder import build_component_manifest
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-# ─── Тесты сервиса component_builder ───────────────────────────
+# ─── component_builder service tests ───────────────────────────
 
 
 class TestBuildDockerComponent:
-    """Мини-манифест для Docker-образа."""
+    """Mini-manifest for a Docker image."""
 
     def test_docker_basic_fields(self):
-        """Основные поля Docker-компонента."""
+        """Basic fields of a Docker component."""
         meta = ComponentMetadata.model_validate({
             "name": "jaeger",
             "type": "container",
@@ -48,7 +48,7 @@ class TestBuildDockerComponent:
         assert comp["bom-ref"].startswith("jaeger:")
 
     def test_docker_purl_without_regdef(self):
-        """PURL генерируется с хостом как registry_name."""
+        """PURL is built with the host as registry_name."""
         meta = ComponentMetadata.model_validate({
             "name": "jaeger",
             "type": "container",
@@ -61,7 +61,7 @@ class TestBuildDockerComponent:
         assert comp["purl"] == "pkg:docker/core/jaeger@build3?registry_name=sandbox.example.com"
 
     def test_docker_purl_with_regdef(self):
-        """PURL с regdef — registry_name из regdef."""
+        """PURL with regdef — registry_name taken from regdef."""
         from app_manifest.services.regdef_loader import load_registry_definition
 
         meta = ComponentMetadata.model_validate({
@@ -78,7 +78,7 @@ class TestBuildDockerComponent:
         assert comp["purl"] == "pkg:docker/netcracker/jaeger@build3?registry_name=qubership"
 
     def test_docker_hashes(self):
-        """Хеши передаются в мини-манифест."""
+        """Hashes are passed through to the mini-manifest."""
         meta = ComponentMetadata.model_validate({
             "name": "jaeger",
             "type": "container",
@@ -95,7 +95,7 @@ class TestBuildDockerComponent:
         assert comp["hashes"][0] == {"alg": "SHA-256", "content": "aaa"}
 
     def test_docker_without_reference_no_purl(self):
-        """Без reference — нет PURL."""
+        """Without reference — no PURL."""
         meta = ComponentMetadata.model_validate({
             "name": "jaeger",
             "type": "container",
@@ -108,10 +108,10 @@ class TestBuildDockerComponent:
 
 
 class TestBuildHelmComponent:
-    """Мини-манифест для Helm-чарта."""
+    """Mini-manifest for a Helm chart."""
 
     def test_helm_basic_fields(self):
-        """Основные поля Helm-компонента."""
+        """Basic fields of a Helm component."""
         meta = ComponentMetadata.model_validate({
             "name": "qubership-jaeger",
             "type": "application",
@@ -130,7 +130,7 @@ class TestBuildHelmComponent:
         assert comp["bom-ref"].startswith("qubership-jaeger:")
 
     def test_helm_purl_with_regdef(self):
-        """PURL для Helm с regdef."""
+        """PURL for Helm with regdef."""
         from app_manifest.services.regdef_loader import load_registry_definition
 
         meta = ComponentMetadata.model_validate({
@@ -146,7 +146,7 @@ class TestBuildHelmComponent:
         assert comp["purl"] == "pkg:helm/charts/qubership-jaeger@1.2.3?registry_name=qubership"
 
     def test_helm_version_from_app_version(self):
-        """appVersion приоритетнее version."""
+        """appVersion takes precedence over version."""
         meta = ComponentMetadata.model_validate({
             "name": "my-chart",
             "type": "application",
@@ -160,7 +160,7 @@ class TestBuildHelmComponent:
         assert comp["version"] == "2.0.0"
 
     def test_helm_nested_components(self):
-        """Вложенные компоненты (values.schema.json, resource-profiles)."""
+        """Nested components (values.schema.json, resource-profiles)."""
         with open(FIXTURES / "metadata/helm_metadata.json") as f:
             raw = json.load(f)
         meta = ComponentMetadata.model_validate(raw)
@@ -170,20 +170,20 @@ class TestBuildHelmComponent:
         assert "components" in comp
         assert len(comp["components"]) == 2
 
-        # values.schema.json
+        # values.schema.json component
         schema_comp = comp["components"][0]
         assert schema_comp["name"] == "values.schema.json"
         assert schema_comp["type"] == "data"
         assert schema_comp["mime-type"] == "application/vnd.nc.helm.values.schema"
         assert len(schema_comp["data"]) == 1
 
-        # resource-profile-baselines
+        # resource-profile-baselines component
         profiles_comp = comp["components"][1]
         assert profiles_comp["name"] == "resource-profile-baselines"
         assert len(profiles_comp["data"]) == 2
 
     def test_helm_without_nested_components(self):
-        """Helm без вложенных компонентов."""
+        """Helm without nested components."""
         meta = ComponentMetadata.model_validate({
             "name": "simple-chart",
             "type": "application",
@@ -197,10 +197,10 @@ class TestBuildHelmComponent:
 
 
 class TestMiniManifestStructure:
-    """Общие проверки структуры мини-манифеста."""
+    """General structure checks for mini-manifests."""
 
     def test_has_metadata_section(self):
-        """Мини-манифест содержит metadata с tool info."""
+        """Mini-manifest contains metadata with tool info."""
         meta = ComponentMetadata.model_validate({
             "name": "test",
             "type": "container",
@@ -214,7 +214,7 @@ class TestMiniManifestStructure:
         assert data["metadata"]["tools"]["components"][0]["name"] == "am-build-cli"
 
     def test_serial_number_is_urn_uuid(self):
-        """serialNumber в формате urn:uuid:..."""
+        """serialNumber follows the urn:uuid:... format."""
         meta = ComponentMetadata.model_validate({
             "name": "test",
             "type": "container",
@@ -226,14 +226,14 @@ class TestMiniManifestStructure:
         assert data["serialNumber"].startswith("urn:uuid:")
 
 
-# ─── Тесты CLI команды component ──────────────────────
+# ─── component CLI command tests ──────────────────────
 
 
 class TestGenerateComponentCLI:
-    """Сквозные тесты CLI команды component."""
+    """End-to-end tests for the component CLI command."""
 
     def test_help(self):
-        """Справка отображается."""
+        """Help is displayed."""
         runner = CliRunner()
         result = runner.invoke(cli, ["component", "--help"])
         assert result.exit_code == 0
@@ -242,7 +242,7 @@ class TestGenerateComponentCLI:
         assert "--registry-def" in result.output
 
     def test_docker_metadata(self, tmp_path):
-        """Генерация мини-манифеста для Docker."""
+        """Generate a mini-manifest for Docker."""
         out_file = tmp_path / "component.json"
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -263,7 +263,7 @@ class TestGenerateComponentCLI:
         assert "purl" in data["components"][0]
 
     def test_helm_metadata_with_regdef(self, tmp_path):
-        """Генерация мини-манифеста для Helm с regdef."""
+        """Generate a mini-manifest for Helm with regdef."""
         out_file = tmp_path / "component.json"
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -283,7 +283,7 @@ class TestGenerateComponentCLI:
         assert len(comp["components"]) == 2
 
     def test_helm_metadata_without_regdef(self, tmp_path):
-        """Генерация мини-манифеста для Helm без regdef — хост как registry_name."""
+        """Generate a mini-manifest for Helm without regdef — host is used as registry_name."""
         out_file = tmp_path / "component.json"
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -300,7 +300,7 @@ class TestGenerateComponentCLI:
         assert "registry_name=registry.qubership.org" in comp["purl"]
 
     def test_creates_parent_dirs(self, tmp_path):
-        """Создаёт родительские директории для output файла."""
+        """Creates parent directories for the output file."""
         out_file = tmp_path / "sub" / "dir" / "component.json"
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -312,7 +312,7 @@ class TestGenerateComponentCLI:
         assert out_file.exists()
 
     def test_shows_in_root_help(self):
-        """Команда component видна в корневой справке."""
+        """The component command is visible in the root help."""
         runner = CliRunner()
         result = runner.invoke(cli, ["--help"])
         assert result.exit_code == 0

@@ -1,13 +1,13 @@
 {
-  "serialNumber": "urn:uuid:a0e9d316-1639-45b8-86d9-611e54f5048e",
+  "serialNumber": "urn:uuid:2183f5ef-5ffb-4d12-b664-99b386ea3b27",
   "$schema": "../schemas/application-manifest.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-02-24T07:17:46Z",
+    "timestamp": "2026-03-11T06:28:47Z",
     "component": {
-      "bom-ref": "jaeger:0b44e01d-202a-42a0-992e-e88816f5ce2e",
+      "bom-ref": "jaeger:1132b126-061b-4b4f-8213-c64bca78f950",
       "type": "application",
       "mime-type": "application/vnd.nc.application",
       "name": "jaeger",
@@ -25,7 +25,7 @@
   },
   "components": [
     {
-      "bom-ref": "qubership-jaeger:3129dd17-a886-4952-93e2-0a119cecd7fd",
+      "bom-ref": "qubership-jaeger:e3809722-1e8e-4d22-8515-44fcc91cb2a3",
       "type": "application",
       "mime-type": "application/vnd.nc.standalone-runnable",
       "name": "qubership-jaeger",
@@ -34,7 +34,7 @@
       "components": []
     },
     {
-      "bom-ref": "qubership-jaeger:49cf2803-ed64-4420-9125-531fa60d936e",
+      "bom-ref": "qubership-jaeger:7a6793a2-fa22-44f0-a2fc-fa93e90fe4f0",
       "type": "application",
       "mime-type": "application/vnd.nc.helm.chart",
       "name": "qubership-jaeger",
@@ -48,37 +48,37 @@
         {
           "name": "qubership:helm.values.artifactMappings",
           "value": {
-            "jaeger-cassandra-schema:1fc62481-3d67-4013-aba2-8e52cd5ae220": {
+            "jaeger-cassandra-schema:3851c0c4-55b8-468f-a1a7-8b5f1f88393a": {
               "valuesPathPrefix": "cassandraSchema"
             },
-            "jaeger:12e56834-406d-43d8-a846-f605d0a62582": {
+            "jaeger:27ff27ce-dd0a-4e32-a081-8f3f7e3c720d": {
               "valuesPathPrefix": "jaeger"
             },
-            "jaeger-readiness-probe:73dd6b8d-f4ad-454f-be9a-f6cc95c2e6a4": {
+            "jaeger-readiness-probe:ec2c9f0c-dcec-471c-b2f6-3a9dce394d28": {
               "valuesPathPrefix": "readinessProbe"
             },
-            "example-hotrod:3ac47d66-cb2f-4c24-9d5d-9de1aedb1acc": {
+            "example-hotrod:9a7d4277-9a1d-43ec-aedd-67beb20f680a": {
               "valuesPathPrefix": "exampleHotrod"
             },
-            "jaeger-integration-tests:4c8434a3-d630-4df0-b8fe-8f1279716b80": {
+            "jaeger-integration-tests:beae5abd-512a-4459-9d56-cd7d9b5f81d5": {
               "valuesPathPrefix": "integrationTests"
             },
-            "jaeger-es-index-cleaner:e339a3b9-728c-4656-a360-7bb80f7d8329": {
+            "jaeger-es-index-cleaner:2273f0c6-2141-4e6f-bed5-ca778673c9ab": {
               "valuesPathPrefix": "elasticsearch.indexCleaner"
             },
-            "jaeger-es-rollover:9cbdfddd-84a7-414b-af4e-555dcfb9e22f": {
+            "jaeger-es-rollover:f672e785-bd33-4ae3-912d-8368e67af24c": {
               "valuesPathPrefix": "elasticsearch.rollover"
             },
-            "envoy:0c9ce864-85e8-4776-b2e5-8d25630d64e3": {
+            "envoy:48bccf6d-4ba6-4914-9a6d-f9eed0e988e3": {
               "valuesPathPrefix": "proxy"
             },
-            "openjdk:7634b72f-5880-4333-8abe-262d47ad75df": {
+            "openjdk:77c0201a-fcf0-41ac-95f4-a557b6ab9951": {
               "valuesPathPrefix": "."
             },
-            "spark-dependencies-image:b3b1ac3f-6ec8-405c-8e95-aff5748fee9c": {
+            "spark-dependencies-image:f51da783-0f97-487e-a2d9-d183dbe2a5ba": {
               "valuesPathPrefix": "spark"
             },
-            "qubership-deployment-status-provisioner:d1785444-3cac-42dd-b87b-c35d1cac7213": {
+            "qubership-deployment-status-provisioner:9a3e300e-4f9a-479e-b216-5d51b767f73e": {
               "valuesPathPrefix": "statusProvisioner"
             }
           }
@@ -87,13 +87,13 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "b50818c0065a24273d0a05e20a43ea7e153caeea492d23f88ba336fdae7db63e"
+          "content": "f723e11ef166734e9cb51a595f0c8f723a8f6b5fb1f5e145932574c730f07ec7"
         }
       ],
       "components": []
     },
     {
-      "bom-ref": "jaeger-cassandra-schema:1fc62481-3d67-4013-aba2-8e52cd5ae220",
+      "bom-ref": "jaeger-cassandra-schema:3851c0c4-55b8-468f-a1a7-8b5f1f88393a",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger-cassandra-schema",
@@ -102,7 +102,7 @@
       "purl": "pkg:docker/jaegertracing/jaeger-cassandra-schema@1.72.0?registry_name=docker.io"
     },
     {
-      "bom-ref": "jaeger:12e56834-406d-43d8-a846-f605d0a62582",
+      "bom-ref": "jaeger:27ff27ce-dd0a-4e32-a081-8f3f7e3c720d",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger",
@@ -111,7 +111,7 @@
       "purl": "pkg:docker/jaegertracing/jaeger@2.9.0?registry_name=docker.io"
     },
     {
-      "bom-ref": "example-hotrod:3ac47d66-cb2f-4c24-9d5d-9de1aedb1acc",
+      "bom-ref": "example-hotrod:9a7d4277-9a1d-43ec-aedd-67beb20f680a",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "example-hotrod",
@@ -120,7 +120,7 @@
       "purl": "pkg:docker/jaegertracing/example-hotrod@1.72.0?registry_name=docker.io"
     },
     {
-      "bom-ref": "jaeger-es-index-cleaner:e339a3b9-728c-4656-a360-7bb80f7d8329",
+      "bom-ref": "jaeger-es-index-cleaner:2273f0c6-2141-4e6f-bed5-ca778673c9ab",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger-es-index-cleaner",
@@ -129,7 +129,7 @@
       "purl": "pkg:docker/jaegertracing/jaeger-es-index-cleaner@1.72.0?registry_name=docker.io"
     },
     {
-      "bom-ref": "jaeger-es-rollover:9cbdfddd-84a7-414b-af4e-555dcfb9e22f",
+      "bom-ref": "jaeger-es-rollover:f672e785-bd33-4ae3-912d-8368e67af24c",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger-es-rollover",
@@ -138,7 +138,7 @@
       "purl": "pkg:docker/jaegertracing/jaeger-es-rollover@1.72.0?registry_name=docker.io"
     },
     {
-      "bom-ref": "envoy:0c9ce864-85e8-4776-b2e5-8d25630d64e3",
+      "bom-ref": "envoy:48bccf6d-4ba6-4914-9a6d-f9eed0e988e3",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "envoy",
@@ -147,7 +147,7 @@
       "purl": "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
     },
     {
-      "bom-ref": "openjdk:7634b72f-5880-4333-8abe-262d47ad75df",
+      "bom-ref": "openjdk:77c0201a-fcf0-41ac-95f4-a557b6ab9951",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "openjdk",
@@ -156,7 +156,7 @@
       "purl": "pkg:docker/library/openjdk@11?registry_name=docker.io"
     },
     {
-      "bom-ref": "jaeger-readiness-probe:73dd6b8d-f4ad-454f-be9a-f6cc95c2e6a4",
+      "bom-ref": "jaeger-readiness-probe:ec2c9f0c-dcec-471c-b2f6-3a9dce394d28",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger-readiness-probe",
@@ -171,7 +171,7 @@
       ]
     },
     {
-      "bom-ref": "jaeger-integration-tests:4c8434a3-d630-4df0-b8fe-8f1279716b80",
+      "bom-ref": "jaeger-integration-tests:beae5abd-512a-4459-9d56-cd7d9b5f81d5",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "jaeger-integration-tests",
@@ -186,7 +186,7 @@
       ]
     },
     {
-      "bom-ref": "spark-dependencies-image:b3b1ac3f-6ec8-405c-8e95-aff5748fee9c",
+      "bom-ref": "spark-dependencies-image:f51da783-0f97-487e-a2d9-d183dbe2a5ba",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "spark-dependencies-image",
@@ -201,7 +201,7 @@
       ]
     },
     {
-      "bom-ref": "qubership-deployment-status-provisioner:d1785444-3cac-42dd-b87b-c35d1cac7213",
+      "bom-ref": "qubership-deployment-status-provisioner:9a3e300e-4f9a-479e-b216-5d51b767f73e",
       "type": "container",
       "mime-type": "application/vnd.docker.image",
       "name": "qubership-deployment-status-provisioner",
@@ -218,43 +218,43 @@
   ],
   "dependencies": [
     {
-      "ref": "jaeger:0b44e01d-202a-42a0-992e-e88816f5ce2e",
+      "ref": "jaeger:1132b126-061b-4b4f-8213-c64bca78f950",
       "dependsOn": [
-        "qubership-jaeger:3129dd17-a886-4952-93e2-0a119cecd7fd",
-        "qubership-jaeger:49cf2803-ed64-4420-9125-531fa60d936e",
-        "jaeger-cassandra-schema:1fc62481-3d67-4013-aba2-8e52cd5ae220",
-        "jaeger:12e56834-406d-43d8-a846-f605d0a62582",
-        "example-hotrod:3ac47d66-cb2f-4c24-9d5d-9de1aedb1acc",
-        "jaeger-es-index-cleaner:e339a3b9-728c-4656-a360-7bb80f7d8329",
-        "jaeger-es-rollover:9cbdfddd-84a7-414b-af4e-555dcfb9e22f",
-        "envoy:0c9ce864-85e8-4776-b2e5-8d25630d64e3",
-        "openjdk:7634b72f-5880-4333-8abe-262d47ad75df",
-        "jaeger-readiness-probe:73dd6b8d-f4ad-454f-be9a-f6cc95c2e6a4",
-        "jaeger-integration-tests:4c8434a3-d630-4df0-b8fe-8f1279716b80",
-        "spark-dependencies-image:b3b1ac3f-6ec8-405c-8e95-aff5748fee9c",
-        "qubership-deployment-status-provisioner:d1785444-3cac-42dd-b87b-c35d1cac7213"
+        "qubership-jaeger:e3809722-1e8e-4d22-8515-44fcc91cb2a3",
+        "qubership-jaeger:7a6793a2-fa22-44f0-a2fc-fa93e90fe4f0",
+        "jaeger-cassandra-schema:3851c0c4-55b8-468f-a1a7-8b5f1f88393a",
+        "jaeger:27ff27ce-dd0a-4e32-a081-8f3f7e3c720d",
+        "example-hotrod:9a7d4277-9a1d-43ec-aedd-67beb20f680a",
+        "jaeger-es-index-cleaner:2273f0c6-2141-4e6f-bed5-ca778673c9ab",
+        "jaeger-es-rollover:f672e785-bd33-4ae3-912d-8368e67af24c",
+        "envoy:48bccf6d-4ba6-4914-9a6d-f9eed0e988e3",
+        "openjdk:77c0201a-fcf0-41ac-95f4-a557b6ab9951",
+        "jaeger-readiness-probe:ec2c9f0c-dcec-471c-b2f6-3a9dce394d28",
+        "jaeger-integration-tests:beae5abd-512a-4459-9d56-cd7d9b5f81d5",
+        "spark-dependencies-image:f51da783-0f97-487e-a2d9-d183dbe2a5ba",
+        "qubership-deployment-status-provisioner:9a3e300e-4f9a-479e-b216-5d51b767f73e"
       ]
     },
     {
-      "ref": "qubership-jaeger:3129dd17-a886-4952-93e2-0a119cecd7fd",
+      "ref": "qubership-jaeger:e3809722-1e8e-4d22-8515-44fcc91cb2a3",
       "dependsOn": [
-        "qubership-jaeger:49cf2803-ed64-4420-9125-531fa60d936e"
+        "qubership-jaeger:7a6793a2-fa22-44f0-a2fc-fa93e90fe4f0"
       ]
     },
     {
-      "ref": "qubership-jaeger:49cf2803-ed64-4420-9125-531fa60d936e",
+      "ref": "qubership-jaeger:7a6793a2-fa22-44f0-a2fc-fa93e90fe4f0",
       "dependsOn": [
-        "jaeger-cassandra-schema:1fc62481-3d67-4013-aba2-8e52cd5ae220",
-        "jaeger:12e56834-406d-43d8-a846-f605d0a62582",
-        "jaeger-readiness-probe:73dd6b8d-f4ad-454f-be9a-f6cc95c2e6a4",
-        "example-hotrod:3ac47d66-cb2f-4c24-9d5d-9de1aedb1acc",
-        "jaeger-integration-tests:4c8434a3-d630-4df0-b8fe-8f1279716b80",
-        "jaeger-es-index-cleaner:e339a3b9-728c-4656-a360-7bb80f7d8329",
-        "jaeger-es-rollover:9cbdfddd-84a7-414b-af4e-555dcfb9e22f",
-        "envoy:0c9ce864-85e8-4776-b2e5-8d25630d64e3",
-        "openjdk:7634b72f-5880-4333-8abe-262d47ad75df",
-        "spark-dependencies-image:b3b1ac3f-6ec8-405c-8e95-aff5748fee9c",
-        "qubership-deployment-status-provisioner:d1785444-3cac-42dd-b87b-c35d1cac7213"
+        "jaeger-cassandra-schema:3851c0c4-55b8-468f-a1a7-8b5f1f88393a",
+        "jaeger:27ff27ce-dd0a-4e32-a081-8f3f7e3c720d",
+        "jaeger-readiness-probe:ec2c9f0c-dcec-471c-b2f6-3a9dce394d28",
+        "example-hotrod:9a7d4277-9a1d-43ec-aedd-67beb20f680a",
+        "jaeger-integration-tests:beae5abd-512a-4459-9d56-cd7d9b5f81d5",
+        "jaeger-es-index-cleaner:2273f0c6-2141-4e6f-bed5-ca778673c9ab",
+        "jaeger-es-rollover:f672e785-bd33-4ae3-912d-8368e67af24c",
+        "envoy:48bccf6d-4ba6-4914-9a6d-f9eed0e988e3",
+        "openjdk:77c0201a-fcf0-41ac-95f4-a557b6ab9951",
+        "spark-dependencies-image:f51da783-0f97-487e-a2d9-d183dbe2a5ba",
+        "qubership-deployment-status-provisioner:9a3e300e-4f9a-479e-b216-5d51b767f73e"
       ]
     }
   ]

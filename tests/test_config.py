@@ -1,4 +1,4 @@
-"""Тесты для моделей YAML-конфига и загрузчика."""
+"""Tests for YAML build config models and loader."""
 
 from pathlib import Path
 
@@ -8,59 +8,58 @@ from pydantic import ValidationError
 from app_manifest.models.config import BuildConfig, ComponentConfig, DependencyConfig, MimeType
 from app_manifest.services.config_loader import load_build_config
 
-# Путь к папке с тестовыми файлами
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class TestMimeType:
-    """Тесты для перечисления MimeType."""
+    """Tests for the MimeType enum."""
 
     def test_valid_mime_types(self):
-        """Все три основных типа должны быть в enum."""
+        """Core mime types must be present in the enum."""
         assert MimeType.STANDALONE_RUNNABLE == "application/vnd.nc.standalone-runnable"
         assert MimeType.DOCKER_IMAGE == "application/vnd.docker.image"
         assert MimeType.HELM_CHART == "application/vnd.nc.helm.chart"
 
     def test_invalid_mime_type_rejected(self):
-        """Неизвестный mimeType должен вызвать ошибку."""
-        with pytest.raises(ValidationError):
-            ComponentConfig(
-                name="test",
-                mimeType="application/vnd.nc.unknown",
-            )
+        """Unknown mimeType must raise a validation error."""
+        with pytest.raises((ValidationError, ValueError)):
+            ComponentConfig.model_validate({
+                "name": "test",
+                "mimeType": "application/vnd.nc.unknown",
+            })
 
 
 class TestDependencyConfig:
-    """Тесты для модели зависимости."""
+    """Tests for the dependency model."""
 
     def test_basic_dependency(self):
-        """Простая зависимость без valuesPathPrefix."""
+        """Simple dependency without valuesPathPrefix."""
         dep = DependencyConfig(
             name="jaeger",
-            mimeType="application/vnd.docker.image",
+            mimeType=MimeType.DOCKER_IMAGE,
         )
         assert dep.name == "jaeger"
         assert dep.mime_type == MimeType.DOCKER_IMAGE
         assert dep.values_path_prefix is None
 
     def test_dependency_with_values_path(self):
-        """Зависимость с valuesPathPrefix."""
+        """Dependency with valuesPathPrefix."""
         dep = DependencyConfig(
             name="jaeger",
-            mimeType="application/vnd.docker.image",
+            mimeType=MimeType.DOCKER_IMAGE,
             valuesPathPrefix="images.jaeger",
         )
         assert dep.values_path_prefix == "images.jaeger"
 
 
 class TestComponentConfig:
-    """Тесты для модели компонента."""
+    """Tests for the component model."""
 
     def test_minimal_component(self):
-        """Компонент с минимумом полей — без reference и dependsOn."""
+        """Component with minimal fields — no reference or dependsOn."""
         comp = ComponentConfig(
             name="my-service",
-            mimeType="application/vnd.docker.image",
+            mimeType=MimeType.DOCKER_IMAGE,
         )
         assert comp.name == "my-service"
         assert comp.mime_type == MimeType.DOCKER_IMAGE
@@ -68,34 +67,34 @@ class TestComponentConfig:
         assert comp.depends_on == []
 
     def test_component_with_dependencies(self):
-        """Компонент с зависимостями."""
+        """Component with dependencies."""
         comp = ComponentConfig(
             name="my-chart",
-            mimeType="application/vnd.nc.helm.chart",
+            mimeType=MimeType.HELM_CHART,
             reference="oci://registry/repo/chart:1.0",
             dependsOn=[
-                {"name": "img1", "mimeType": "application/vnd.docker.image"},
+                DependencyConfig(name="img1", mimeType=MimeType.DOCKER_IMAGE),
             ],
         )
         assert len(comp.depends_on) == 1
         assert comp.depends_on[0].name == "img1"
 
     def test_missing_name_raises_error(self):
-        """Компонент без имени — ошибка."""
+        """Component without name raises an error."""
         with pytest.raises(ValidationError):
-            ComponentConfig(mimeType="application/vnd.docker.image")
+            ComponentConfig(mimeType=MimeType.DOCKER_IMAGE)  # type: ignore[call-arg]
 
 
 class TestBuildConfig:
-    """Тесты для корневой модели конфига."""
+    """Tests for the root build config model."""
 
     def test_minimal_config(self):
-        """Минимальный конфиг с одним компонентом."""
+        """Minimal config with one component."""
         config = BuildConfig(
             applicationVersion="1.0.0",
             applicationName="test-app",
             components=[
-                {"name": "svc", "mimeType": "application/vnd.docker.image"},
+                ComponentConfig(name="svc", mimeType=MimeType.DOCKER_IMAGE),
             ],
         )
         assert config.application_name == "test-app"
@@ -103,27 +102,27 @@ class TestBuildConfig:
         assert len(config.components) == 1
 
     def test_missing_version_raises_error(self):
-        """Конфиг без версии — ошибка."""
+        """Config without version raises an error."""
         with pytest.raises(ValidationError):
-            BuildConfig(
+            BuildConfig(  # type: ignore[call-arg]
                 applicationName="test",
                 components=[],
             )
 
     def test_missing_name_raises_error(self):
-        """Конфиг без имени — ошибка."""
+        """Config without name raises an error."""
         with pytest.raises(ValidationError):
-            BuildConfig(
+            BuildConfig(  # type: ignore[call-arg]
                 applicationVersion="1.0",
                 components=[],
             )
 
 
 class TestConfigLoader:
-    """Тесты для загрузки YAML-файла."""
+    """Tests for YAML file loading."""
 
     def test_load_minimal_config(self):
-        """Загрузка тестового YAML-файла."""
+        """Load test YAML file."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
 
         assert config.application_name == "qubership-jaeger"
@@ -131,7 +130,7 @@ class TestConfigLoader:
         assert len(config.components) == 4
 
     def test_standalone_component(self):
-        """Проверяем standalone-runnable компонент из YAML."""
+        """Check standalone-runnable component from YAML."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
 
         standalone = config.components[0]
@@ -141,7 +140,7 @@ class TestConfigLoader:
         assert standalone.depends_on[0].mime_type == MimeType.HELM_CHART
 
     def test_helm_component_with_deps(self):
-        """Проверяем helm-chart компонент с зависимостями."""
+        """Check helm-chart component with dependencies."""
         config = load_build_config(FIXTURES / "configs/minimal_config.yaml")
 
         helm = config.components[1]
@@ -151,6 +150,6 @@ class TestConfigLoader:
         assert helm.depends_on[0].values_path_prefix == "images.jaeger"
 
     def test_load_nonexistent_file_raises_error(self):
-        """Несуществующий файл — ошибка."""
+        """Non-existent file raises an error."""
         with pytest.raises(FileNotFoundError):
             load_build_config(Path("nonexistent.yaml"))

@@ -34,7 +34,7 @@ from app_manifest.models.config import BuildConfig, ComponentConfig, MimeType
 from app_manifest.models.regdef import RegistryDefinition
 from app_manifest.services.purl import make_docker_purl, make_helm_purl, parse_docker_reference
 
-_HELM_TYPES = {MimeType.HELM_CHART, MimeType.Q_HELM_CHART}
+_HELM_TYPES = {MimeType.HELM_CHART}
 _DOCKER_TYPES = {MimeType.DOCKER_IMAGE}
 
 

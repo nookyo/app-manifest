@@ -74,7 +74,7 @@ class TestDockerReferenceFormats:
     def _make_comp(self, name: str, reference: str) -> ComponentConfig:
         return ComponentConfig(
             name=name,
-            mime_type=MimeType.DOCKER_IMAGE,
+            mimeType=MimeType.DOCKER_IMAGE,
             reference=reference,
         )
 
@@ -649,7 +649,7 @@ class TestJaegerFullPipeline:
 
     def test_manifest_is_valid(self, tmp_path):
         """generate --validate succeeds without errors."""
-        self._build_manifest(tmp_path)  # assert внутри _build_manifest
+        self._build_manifest(tmp_path)  # assertions are inside _build_manifest
 
     def test_component_count(self, tmp_path):
         """qubership-jaeger(standalone) + qubership-jaeger(helm) + 11 docker = 13."""
@@ -749,7 +749,7 @@ class TestJaegerFullPipeline:
         assert len(helm_deps["dependsOn"]) == 11
 
     def test_standalone_depends_on_helm(self, tmp_path):
-        """qubership-jaeger standalone-runnable зависит от qubership-jaeger helm."""
+        """qubership-jaeger standalone-runnable depends on qubership-jaeger helm."""
         data = self._build_manifest(tmp_path)
         standalone = next(
             c for c in data["components"]
