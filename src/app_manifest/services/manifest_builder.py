@@ -365,6 +365,14 @@ def _build_dependencies(
         if not comp_config:
             continue
 
+        if sub_key not in bom_refs:
+            click.echo(
+                f"Warning: sub-chart '{sub_key[0]}' ({sub_key[1]}) "
+                f"referenced in dependsOn but not found in components — skipped",
+                err=True,
+            )
+            continue
+
         sub_ref = bom_refs[sub_key]
         dep_refs = []
         for dep in comp_config.depends_on:

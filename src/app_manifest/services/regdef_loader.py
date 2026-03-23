@@ -14,4 +14,6 @@ def load_registry_definition(path: Path) -> RegistryDefinition:
     """Read a Registry Definition file."""
     with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
+    if not raw:
+        raise ValueError(f"Registry definition file {path} is empty or invalid")
     return RegistryDefinition.model_validate(raw)

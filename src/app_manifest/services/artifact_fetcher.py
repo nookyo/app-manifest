@@ -264,7 +264,10 @@ def _read_chart_yaml(chart_dir: Path) -> dict:
     """Read Chart.yaml."""
     chart_file = chart_dir / "Chart.yaml"
     with open(chart_file, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        raw = yaml.safe_load(f)
+    if not raw:
+        raise ValueError(f"Chart.yaml is empty in {chart_dir}")
+    return raw
 
 
 def _extract_nested_components(chart_dir: Path) -> list[CdxComponent]:
