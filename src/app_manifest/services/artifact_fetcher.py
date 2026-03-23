@@ -149,7 +149,9 @@ def fetch_helm_component(
         chart_yaml = _read_chart_yaml(chart_dir)
 
         # 6. Collect data
-        name = chart_yaml.get("name", "unknown")
+        name = chart_yaml.get("name") or None
+        if not name:
+            raise ValueError(f"Chart.yaml is missing required field 'name' in {chart_dir}")
         version = chart_yaml.get("version") or None
         app_version = chart_yaml.get("appVersion") or None
         final_version = app_version or version
