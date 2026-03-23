@@ -78,6 +78,8 @@ def fetch_docker_component_from_reference(
     """
     from datetime import datetime, timezone
 
+    if not comp_config.reference:
+        raise ValueError(f"Component '{comp_config.name}' has no reference")
     _, version, group = parse_docker_reference(comp_config.reference)
     if not group:
         import sys
@@ -293,7 +295,7 @@ def _extract_nested_components(chart_dir: Path) -> list[CdxComponent]:
     profiles_dir = chart_dir / "resource-profiles"
     if profiles_dir.exists() and profiles_dir.is_dir():
         data_entries: list[CdxDataEntry] = []
-        for profile_file in sorted(profiles_dir.glob("*.yaml")):
+        for profile_file in sorted(profiles_dir.glob("*.yaml")) + sorted(profiles_dir.glob("*.yml")):
             content_b64 = base64.b64encode(
                 profile_file.read_bytes()
             ).decode("ascii")
