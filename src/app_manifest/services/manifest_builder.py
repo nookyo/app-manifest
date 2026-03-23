@@ -265,6 +265,13 @@ def _build_sub_chart(
 ) -> CdxComponent | None:
     """Create a nested sub-chart component."""
     name, mime_type = key
+    if key not in bom_refs:
+        click.echo(
+            f"Warning: sub-chart '{name}' ({mime_type}) "
+            f"referenced in dependsOn but not found in components — skipped",
+            err=True,
+        )
+        return None
     bom_ref = bom_refs[key]
     comp_config = config_index.get(key)
     if not comp_config:
