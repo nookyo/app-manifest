@@ -249,10 +249,11 @@ def _build_helm_component(
     # Version: from mini-manifest, fallback to app_version
     version = source.version or app_version
 
+    merged_properties = (source.properties or []) + properties
     return source.model_copy(update={
         "bom_ref": bom_ref,
         "version": version,
-        "properties": properties,
+        "properties": merged_properties or None,
         "components": nested or [],
     })
 
