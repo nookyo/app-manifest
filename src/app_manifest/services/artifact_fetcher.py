@@ -150,8 +150,11 @@ def fetch_helm_component(
 
         # 6. Collect data
         name = chart_yaml.get("name", "unknown")
-        version = chart_yaml.get("version", "")
-        app_version = chart_yaml.get("appVersion", version)
+        version = chart_yaml.get("version") or None
+        app_version = chart_yaml.get("appVersion") or None
+        final_version = app_version or version
+        if not final_version:
+            raise ValueError(f"Chart.yaml has no 'version' or 'appVersion' field in {chart_dir}")
 
         # 7. PURL
         purl = make_helm_purl(reference, regdef) if reference else None
@@ -165,7 +168,7 @@ def fetch_helm_component(
             type="application",
             mime_type=mime_type,
             name=name,
-            version=app_version or version,
+            version=final_version,
             purl=purl,
             hashes=[CdxHash(alg="SHA-256", content=chart_hash)],
             components=nested,

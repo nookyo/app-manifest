@@ -38,7 +38,7 @@ def load_mini_manifest(path: Path) -> CdxComponent:
     with open(path, encoding="utf-8") as f:
         raw = json.load(f)
 
-    components = raw.get("components", [])
+    components = raw.get("components") or []
     if not components:
         raise ValueError(f"No components found in mini-manifest {path}")
 
