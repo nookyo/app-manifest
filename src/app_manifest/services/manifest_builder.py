@@ -16,6 +16,7 @@ Assembly logic:
   7. Build dependencies — links between components
 """
 
+import click
 from datetime import datetime, timezone
 
 from app_manifest.models.config import BuildConfig, ComponentConfig, MimeType
@@ -341,6 +342,12 @@ def _build_dependencies(
             dep_key = (dep.name, dep.mime_type)
             if dep_key in bom_refs:
                 dep_refs.append(bom_refs[dep_key])
+            else:
+                click.echo(
+                    f"Warning: dependency '{dep.name}' ({dep.mime_type}) "
+                    f"declared in '{comp.name}' but not found in components — skipped",
+                    err=True,
+                )
 
         if dep_refs:
             dependencies.append(CdxDependency(
@@ -363,6 +370,12 @@ def _build_dependencies(
             dep_key = (dep.name, dep.mime_type)
             if dep_key in bom_refs:
                 dep_refs.append(bom_refs[dep_key])
+            else:
+                click.echo(
+                    f"Warning: dependency '{dep.name}' ({dep.mime_type}) "
+                    f"declared in '{comp_config.name}' but not found in components — skipped",
+                    err=True,
+                )
 
         if dep_refs:
             dependencies.append(CdxDependency(
