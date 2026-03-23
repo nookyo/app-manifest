@@ -1,4 +1,4 @@
-"""Валидация Application Manifest по JSON Schema."""
+"""Application Manifest validation against JSON Schema."""
 
 import json
 from pathlib import Path
@@ -9,9 +9,9 @@ _SCHEMA_PATH = Path(__file__).parent.parent / "schemas" / "application-manifest.
 
 
 def validate_manifest(manifest: dict) -> list[str]:
-    """Валидировать манифест по JSON Schema.
+    """Validate manifest against JSON Schema.
 
-    Возвращает список ошибок (пустой если манифест валиден).
+    Returns a list of errors (empty if the manifest is valid).
     """
     schema = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
     validator = jsonschema.Draft7Validator(schema)

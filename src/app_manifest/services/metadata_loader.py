@@ -31,9 +31,9 @@ def load_all_metadata(paths: list[Path]) -> dict[str, ComponentMetadata]:
 
 
 def load_mini_manifest(path: Path) -> CdxComponent:
-    """Загрузить мини-манифест и извлечь компонент.
+    """Load a mini-manifest and extract the component.
 
-    Мини-манифест — CycloneDX BOM с одним компонентом в components[].
+    A mini-manifest is a CycloneDX BOM with a single entry in components[].
     """
     with open(path, encoding="utf-8") as f:
         raw = json.load(f)
@@ -49,9 +49,9 @@ def load_mini_manifest(path: Path) -> CdxComponent:
 def load_all_mini_manifests(
     paths: list[Path],
 ) -> dict[tuple[str, str], CdxComponent]:
-    """Загрузить мини-манифесты и индексировать по (name, mime-type).
+    """Load mini-manifests and index them by (name, mime-type).
 
-    Ключ: (name, mime-type) — уникальный идентификатор компонента.
+    Key: (name, mime-type) — unique component identifier.
     """
     result: dict[tuple[str, str], CdxComponent] = {}
     for p in _expand_paths(paths):
