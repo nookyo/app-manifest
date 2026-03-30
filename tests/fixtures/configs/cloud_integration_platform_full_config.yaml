@@ -1,0 +1,82 @@
+applicationName: cloud-integration-platform
+applicationVersion: "0.0.0-release-2025.4-20251120.144057-26"
+components:
+  - name: cloud-integration-platform
+    mimeType: application/vnd.nc.standalone-runnable
+
+  # Standalone docker images (image_type: image)
+  - name: platform-bootstrap-cli-assembly-release-2025.4-1.8.1
+    mimeType: application/vnd.docker.image
+
+  - name: security-scripts-cli-assembly-release-2025.4-5.13.0
+    mimeType: application/vnd.docker.image
+
+  - name: platform-scripts-cli-assembly-release-2025.4-1.9.0
+    mimeType: application/vnd.docker.image
+
+  # Service docker images (image_type: service)
+  - name: cr-synchonizer-assembly-release-2025.4-1.8.1
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform-ui-assembly-release-2025.4
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform-catalog-assembly-release-2025.4
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform-engine-assembly-release-2025.4
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform-sessions-management-assembly-release-2025.4
+    mimeType: application/vnd.docker.image
+
+  # Service helm charts
+  - name: cr-synchonizer
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cr-synchonizer-assembly-release-2025.4-1.8.1
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cloud-integration-platform-ui
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cloud-integration-platform-ui-assembly-release-2025.4
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cloud-integration-platform-catalog
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cloud-integration-platform-catalog-assembly-release-2025.4
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cloud-integration-platform-engine
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cloud-integration-platform-engine-assembly-release-2025.4
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cloud-integration-platform-sessions-management
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cloud-integration-platform-sessions-management-assembly-release-2025.4
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  # App-chart (umbrella)
+  - name: cloud-integration-platform
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cr-synchonizer
+        mimeType: application/vnd.nc.helm.chart
+      - name: cloud-integration-platform-ui
+        mimeType: application/vnd.nc.helm.chart
+      - name: cloud-integration-platform-catalog
+        mimeType: application/vnd.nc.helm.chart
+      - name: cloud-integration-platform-engine
+        mimeType: application/vnd.nc.helm.chart
+      - name: cloud-integration-platform-sessions-management
+        mimeType: application/vnd.nc.helm.chart
