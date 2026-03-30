@@ -1,0 +1,8 @@
+version: "2.0"
+name: artifactory-netcracker
+dockerConfig:
+  groupUri: artifactorycn.netcracker.com:17004
+  groupName: cloud-core
+helmAppConfig:
+  repositoryDomainName: https://artifactorycn.netcracker.com
+  helmGroupRepoName: nc.helm.charts

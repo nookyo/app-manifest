@@ -139,7 +139,7 @@ class TestGenerateEndToEnd:
     def test_generate_warns_on_missing_mini_manifest(self, tmp_path):
         """Missing mini-manifest → warning in stderr, exit_code=0."""
         out_file = tmp_path / "manifest.json"
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(cli, [
             "generate",
             "-c", str(FIXTURES / "configs/minimal_config.yaml"),

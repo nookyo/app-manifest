@@ -12,10 +12,13 @@ from app_manifest.services.manifest_builder import build_manifest
 from app_manifest.services.metadata_loader import load_all_mini_manifests, load_component_metadata
 from app_manifest.services.regdef_loader import load_registry_definition
 from app_manifest.services.validator import validate_manifest
+from app_manifest.services.dd_converter import convert_dd_to_amv2, convert_amv2_to_dd
+from app_manifest.models.dd import DeploymentDescriptor
+from app_manifest.models.cyclonedx import CycloneDxBom
 
 
 class AliasedGroup(click.Group):
-    _aliases = {"c": "component", "gen": "generate", "f": "fetch", "v": "validate"}
+    _aliases = {"c": "component", "gen": "generate", "f": "fetch", "v": "validate", "cv": "convert"}
 
     def get_command(self, ctx, cmd_name):
         return super().get_command(ctx, self._aliases.get(cmd_name, cmd_name))
@@ -207,6 +210,98 @@ def _load_regdef(registry_def_path: Path | None):
         raise click.ClickException(
             f"Registry definition validation error in {registry_def_path}: {errors}"
         )
+
+
+@cli.command("convert")
+@click.option("--input", "-i", "input_file", required=True, type=click.Path(exists=True, path_type=Path), help="Input file: DD JSON or AMv2 JSON")
+@click.option("--out", "-o", required=True, type=click.Path(path_type=Path), help="Output file path")
+@click.option("--to-dd", "direction", flag_value="to-dd", help="Convert AMv2 → DD")
+@click.option("--to-am", "direction", flag_value="to-am", help="Convert DD → AMv2")
+@click.option("--registry-def", "-r", "registry_def", required=True, type=click.Path(exists=True, path_type=Path), help="Registry Definition YAML file")
+@click.option("--config", "-c", "config_file", default=None, type=click.Path(exists=True, path_type=Path), help="Build Config YAML (required for DD → AMv2)")
+@click.option("--zip", "-z", "zip_file", default=None, type=click.Path(path_type=Path), help="Application ZIP (optional, for values.schema.json and resource-profiles)")
+@click.option("--name", "-n", "app_name", default=None, help="Override application name")
+@click.option("--version", "-v", "app_version", default=None, help="Override application version")
+def convert(input_file, out, direction, registry_def, config_file, zip_file, app_name, app_version):
+    """Convert between Deployment Descriptor (DD) and Application Manifest v2 (AMv2).
+
+    Use --to-dd to convert AMv2 → DD, or --to-am to convert DD → AMv2.
+    """
+    if not direction:
+        raise click.UsageError("Specify conversion direction: --to-dd or --to-am")
+
+    regdef = _load_regdef(registry_def)
+
+    try:
+        if direction == "to-am":
+            # DD → AMv2
+            if not config_file:
+                raise click.UsageError("--config is required for DD → AMv2 conversion")
+
+            build_config = _load_config(config_file)
+
+            try:
+                raw = json.loads(input_file.read_text(encoding="utf-8"))
+                dd = DeploymentDescriptor.model_validate(raw)
+            except json.JSONDecodeError as e:
+                raise click.ClickException(f"Invalid JSON in {input_file}: {e}")
+            except ValidationError as e:
+                errors = "; ".join(
+                    f"{'.'.join(str(x) for x in err['loc'])}: {err['msg']}"
+                    for err in e.errors()
+                )
+                raise click.ClickException(f"DD validation error in {input_file}: {errors}")
+
+            name = app_name or build_config.application_name
+            version = app_version or build_config.application_version
+
+            bom, warnings = convert_dd_to_amv2(
+                dd=dd,
+                config=build_config,
+                regdef=regdef,
+                app_name=name,
+                app_version=version,
+                zip_path=zip_file,
+            )
+
+            for w in warnings:
+                click.echo(w, err=True)
+
+            _write_output(bom, out)
+            click.echo(f"AMv2 written to {out}")
+
+        else:
+            # AMv2 → DD
+            try:
+                raw = json.loads(input_file.read_text(encoding="utf-8"))
+                bom = CycloneDxBom.model_validate(raw)
+            except json.JSONDecodeError as e:
+                raise click.ClickException(f"Invalid JSON in {input_file}: {e}")
+            except ValidationError as e:
+                errors = "; ".join(
+                    f"{'.'.join(str(x) for x in err['loc'])}: {err['msg']}"
+                    for err in e.errors()
+                )
+                raise click.ClickException(f"AMv2 validation error in {input_file}: {errors}")
+
+            dd, warnings = convert_amv2_to_dd(bom=bom, regdef=regdef)
+
+            for w in warnings:
+                click.echo(w, err=True)
+
+            dd_dict = dd.model_dump(by_alias=True, exclude_none=False)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump(dd_dict, f, indent=2, ensure_ascii=False)
+
+            click.echo(f"DD written to {out}")
+
+    except click.ClickException:
+        raise
+    except click.UsageError:
+        raise
+    except Exception as e:
+        raise click.ClickException(str(e))
 
 
 def _write_output(bom, out_path: Path):

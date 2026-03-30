@@ -1,0 +1,36 @@
+applicationName: cloud-integration-platform
+applicationVersion: "0.0.0-release-2025.4-20251120.144057-26"
+components:
+  - name: cloud-integration-platform
+    mimeType: application/vnd.nc.standalone-runnable
+
+  - name: platform-bootstrap-cli-assembly-release-2025.4-1.8.1
+    mimeType: application/vnd.docker.image
+
+  - name: cr-synchonizer
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cr-synchonizer-assembly-release-2025.4-1.8.1
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cloud-integration-platform-ui
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cloud-integration-platform-ui-assembly-release-2025.4
+        mimeType: application/vnd.docker.image
+        valuesPathPrefix: image
+
+  - name: cr-synchonizer-assembly-release-2025.4-1.8.1
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform-ui-assembly-release-2025.4
+    mimeType: application/vnd.docker.image
+
+  - name: cloud-integration-platform
+    mimeType: application/vnd.nc.helm.chart
+    dependsOn:
+      - name: cr-synchonizer
+        mimeType: application/vnd.nc.helm.chart
+      - name: cloud-integration-platform-ui
+        mimeType: application/vnd.nc.helm.chart

@@ -1,0 +1,55 @@
+{
+  "services": [
+    {
+      "image_name": "platform-bootstrap-cli-assembly-release-2025.4-1.8.1",
+      "docker_repository_name": "cloud-core",
+      "docker_tag": "build2",
+      "full_image_name": "artifactorycn.netcracker.com:17004/cloud-core/platform-bootstrap-cli-assembly-release-2025.4-1.8.1:build2",
+      "docker_registry": "artifactorycn.netcracker.com:17004",
+      "docker_digest": "cbdd38201321ac63035302e26a6c6f42d507fc014db6714cb1da01869e1643a4",
+      "image_type": "image"
+    },
+    {
+      "image_name": "cr-synchonizer-assembly-release-2025.4-1.8.1",
+      "docker_repository_name": "cloud-core",
+      "docker_tag": "build2",
+      "full_image_name": "artifactorycn.netcracker.com:17004/cloud-core/cr-synchonizer-assembly-release-2025.4-1.8.1:build2",
+      "docker_registry": "artifactorycn.netcracker.com:17004",
+      "docker_digest": "21c61b54e8fc4016dcf115b556327da96c2f744054b9aaadfbc9a9e54d3a760c",
+      "image_type": "service",
+      "service_name": "cr-synchonizer",
+      "version": "release-2025.4-1.8.1-20251120.070731-2"
+    },
+    {
+      "image_name": "cloud-integration-platform-ui-assembly-release-2025.4",
+      "docker_repository_name": "cloud-bss",
+      "docker_tag": "build5",
+      "full_image_name": "artifactorycn.netcracker.com:17004/cloud-bss/cloud-integration-platform-ui-assembly-release-2025.4:build5",
+      "docker_registry": "artifactorycn.netcracker.com:17004",
+      "docker_digest": "b7ee95d2a485125c86aa6a301664f398f96779e99f33302b94d8e41b9886f8af",
+      "image_type": "service",
+      "service_name": "cloud-integration-platform-ui",
+      "version": "release-2025.4-20251118.123936-5"
+    }
+  ],
+  "charts": [
+    {
+      "helm_chart_name": "cloud-integration-platform",
+      "helm_chart_version": "0.0.0-release-2025.4-20251120.144057-26",
+      "full_chart_name": "https://artifactorycn.netcracker.com/nc.helm.charts/cloud-integration-platform-0.0.0-release-2025.4-20251120.144057-26.tgz",
+      "helm_registry": "https://artifactorycn.netcracker.com/nc.helm.charts",
+      "type": "app-chart"
+    }
+  ],
+  "metadata": {},
+  "include": [],
+  "infrastructures": [],
+  "configurations": [],
+  "frontends": [],
+  "smartplug": [],
+  "jobs": [],
+  "libraries": [],
+  "complexes": [],
+  "additionalArtifacts": {},
+  "descriptors": []
+}
