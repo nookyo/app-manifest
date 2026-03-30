@@ -13,7 +13,8 @@
 
 | | |
 |---|---|
-| [Commands Reference](commands.md) | All four `am` commands, options, and flags |
+| [Commands Reference](commands.md) | All `am` commands, options, and flags |
+| [Convert Command](convert.md) | DD ↔ AMv2 conversion: algorithm, options, examples |
 | [Build Config Reference](configuration.md) | `build-config.yaml` format and field reference |
 | [PURL Reference](purl.md) | How Package URLs are generated for Docker and Helm |
 | [Mini-manifests](mini-manifests.md) | Format, naming rules, collision handling |

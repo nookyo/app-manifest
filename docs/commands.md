@@ -1,6 +1,6 @@
 # CLI Commands Reference
 
-Full reference for all four `am` commands.
+Full reference for all `am` commands.
 
 | Command     | Alias | Description                                     |
 | ----------- | ----- | ----------------------------------------------- |
@@ -8,6 +8,9 @@ Full reference for all four `am` commands.
 | `fetch`     | `f`   | Helm chart / Docker reference to mini-manifest  |
 | `generate`  | `gen` | Mini-manifests + build config to final manifest |
 | `validate`  | `v`   | Validate manifest against JSON Schema           |
+| `convert`   | `cv`  | Convert between DD and AMv2 (both directions)   |
+
+> The `convert` command is documented separately: [convert.md](convert.md)
 
 ---
 
