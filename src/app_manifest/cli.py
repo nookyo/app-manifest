@@ -1,4 +1,6 @@
 import json
+import sys
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 
 import click
@@ -18,16 +20,40 @@ from app_manifest.models.cyclonedx import CycloneDxBom
 
 
 class AliasedGroup(click.Group):
-    _aliases = {"c": "component", "gen": "generate", "f": "fetch", "v": "validate", "cv": "convert"}
+    _aliases = {"c": "component", "gen": "generate", "f": "fetch", "v": "validate", "cv": "convert", "i": "info"}
 
     def get_command(self, ctx, cmd_name):
         return super().get_command(ctx, self._aliases.get(cmd_name, cmd_name))
 
 
+try:
+    _version = version("app-manifest-cli")
+except PackageNotFoundError:
+    _version = "unknown"
+
+
 @click.group(cls=AliasedGroup)
+@click.version_option(version=_version, prog_name="am")
 def cli():
     """Application Manifest v2 Generator."""
     pass
+
+
+@cli.command("info")
+def info():
+    """Show version and information about the tool."""
+    click.echo(f"app-manifest-cli  {_version}")
+    click.echo(f"Python            {sys.version.split()[0]}")
+    click.echo()
+    click.echo("Commands:")
+    click.echo("  component  (c)   Generate a CycloneDX mini-manifest for a single component")
+    click.echo("  fetch      (f)   Fetch Helm charts and generate mini-manifests")
+    click.echo("  generate   (gen) Generate an Application Manifest v2 JSON from mini-manifests")
+    click.echo("  validate   (v)   Validate a manifest against the JSON Schema")
+    click.echo("  convert    (cv)  Convert between DD and AMv2")
+    click.echo("  info       (i)   Show this info")
+    click.echo()
+    click.echo("Docs: https://github.com/netcracker/app-manifest")
 
 
 @cli.command()
