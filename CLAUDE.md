@@ -4,12 +4,12 @@ CLI tool (`am`) that generates **Application Manifest v2** (AMv2) JSON files in 
 
 ## Detailed documentation
 
-- [docs/manifest-assembly.md](docs/manifest-assembly.md) — полный алгоритм `generate` по шагам с примерами
-- [docs/mini-manifests.md](docs/mini-manifests.md) — формат мини-манифестов, правила именования файлов, collision handling
-- [docs/convert.md](docs/convert.md) — DD↔AMv2 field mapping, алгоритм конвертации, round-trip
-- [docs/purl.md](docs/purl.md) — как строится PURL, роль Registry Definition, matching logic
-- [docs/configuration.md](docs/configuration.md) — полный справочник по Build Config YAML
-- [docs/getting-started.md](docs/getting-started.md) — CI integration, как писать metadata JSON вручную
+- [docs/manifest-assembly.md](docs/manifest-assembly.md) — full `generate` algorithm step by step with examples
+- [docs/mini-manifests.md](docs/mini-manifests.md) — mini-manifest format, file naming rules, collision handling
+- [docs/convert.md](docs/convert.md) — DD↔AMv2 field mapping, conversion algorithm, round-trip
+- [docs/purl.md](docs/purl.md) — how PURLs are built, Registry Definition role, matching logic
+- [docs/configuration.md](docs/configuration.md) — complete Build Config YAML reference
+- [docs/getting-started.md](docs/getting-started.md) — CI integration, how to write metadata JSON manually
 
 ## Commands
 
