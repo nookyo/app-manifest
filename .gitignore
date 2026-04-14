@@ -8,6 +8,6 @@ build/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.claude/
 *.spec
 uv.lock
+.claude/settings.local.json
