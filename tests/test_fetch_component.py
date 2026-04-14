@@ -429,7 +429,7 @@ class TestFetchDuplicateNameWarning:
             _mock_helm_pull(ref, dest)
             return MagicMock(returncode=0, stderr="")
 
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         with patch("app_manifest.services.artifact_fetcher.subprocess.run") as mock_run:
             mock_run.side_effect = fake_run
             result = runner.invoke(cli, [
@@ -444,9 +444,9 @@ class TestFetchDuplicateNameWarning:
         assert (out_dir / "my-chart_vnd_docker_image.json").exists()
         # No file without suffix
         assert not (out_dir / "my-chart.json").exists()
-        # Warning in stderr
-        assert "duplicate" in result.stderr
-        assert "my-chart" in result.stderr
+        # Warning appears in output (Click 8.2+ mixes stderr into output)
+        assert "duplicate" in result.output
+        assert "my-chart" in result.output
 
 
 # ─── Docker from reference tests ────────────────────────────
