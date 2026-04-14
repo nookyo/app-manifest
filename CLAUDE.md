@@ -2,6 +2,15 @@
 
 CLI tool (`am`) that generates **Application Manifest v2** (AMv2) JSON files in CycloneDX 1.6 BOM format. Used in CI/CD pipelines to describe which Docker images, Helm charts, and other artifacts make up a deployable application.
 
+## Detailed documentation
+
+- [docs/manifest-assembly.md](docs/manifest-assembly.md) — полный алгоритм `generate` по шагам с примерами
+- [docs/mini-manifests.md](docs/mini-manifests.md) — формат мини-манифестов, правила именования файлов, collision handling
+- [docs/convert.md](docs/convert.md) — DD↔AMv2 field mapping, алгоритм конвертации, round-trip
+- [docs/purl.md](docs/purl.md) — как строится PURL, роль Registry Definition, matching logic
+- [docs/configuration.md](docs/configuration.md) — полный справочник по Build Config YAML
+- [docs/getting-started.md](docs/getting-started.md) — CI integration, как писать metadata JSON вручную
+
 ## Commands
 
 ```bash
@@ -177,7 +186,7 @@ DeploymentDescriptor
 - Added to Helm chart components when a docker dependency has `valuesPathPrefix` set.
 - Key is the **bom-ref** of the docker image (not its name).
 - Value is `{"valuesPathPrefix": "images.jaeger"}`.
-- `valuesPathPrefix: "."` means the image maps to the root of `values.yaml`.
+- `valuesPathPrefix: "."` and `valuesPathPrefix: ""` (empty string) both appear in real configs as a way to map to the root of `values.yaml`.
 - Property name: `"qubership:helm.values.artifactMappings"`.
 
 **standalone-runnable:**
@@ -192,6 +201,19 @@ DeploymentDescriptor
 **JSON Schema validation:**
 - Schema lives at `src/app_manifest/schemas/application-manifest.schema.json`.
 - `validate` command and `generate --validate` both use `jsonschema.Draft7Validator`.
+- The schema marks `properties` and `components` as **required** on `helm-chart`, and `properties` and `components` (with `maxItems: 0`) as required on `application-component` (standalone-runnable). This is why `CdxComponent` defaults both fields to `[]` rather than `None` — `exclude_none=True` would silently drop them from the output and break schema validation.
+
+## Known limitations
+
+These are intentional design constraints, not bugs:
+
+| Limitation | Where | Detail |
+|-----------|-------|--------|
+| DD→AMv2 uses only the **first** chart | `dd_converter.py:100` | `dd.charts[0]` — if the DD has multiple charts, only the first becomes the app-chart |
+| AMv2→DD outputs **only** `services` and `charts` | `dd_converter.py:589` | All other DD sections (`metadata`, `infrastructures`, `configurations`, `frontends`, `smartplug`, `jobs`, etc.) are always empty — they cannot be reconstructed from AMv2 |
+| Helm `reference` **must include a version tag** | `purl.py:147` | `oci://registry/chart` without `:1.0.0` raises `ValueError` — tagless references are rejected |
+| Docker `fetch` produces **no hash** | `artifact_fetcher.py` | Image is not downloaded, only the reference is parsed |
+| Sub-charts have **no version, purl, or hashes** | `manifest_builder.py` | Sub-charts are built from config only, not from a mini-manifest |
 
 ## Pydantic conventions
 

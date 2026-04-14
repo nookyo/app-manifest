@@ -13,6 +13,7 @@ import hashlib
 import subprocess
 import tarfile
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import yaml
@@ -44,22 +45,35 @@ def fetch_components_from_config(
 ) -> list[tuple[str, CycloneDxBom]]:
     """Process all components with a reference defined in the config.
 
-    - Helm charts: pulls via helm pull, creates a full mini-manifest.
+    - Helm charts: pulled in parallel via helm pull, creates a full mini-manifest.
     - Docker images: creates a minimal mini-manifest from the reference (no hash).
 
-    Returns a list of (config_name, bom) for each processed component.
+    Returns a list of (config_name, bom) in the same order as they appear in config.
     """
-    results = []
-    for comp in config.components:
+    helm_tasks: list[tuple[int, str, str, str]] = []  # (index, name, reference, mime_type)
+    indexed: list[tuple[int, str, CycloneDxBom]] = []
+
+    for i, comp in enumerate(config.components):
         if not comp.reference:
             continue
         if comp.mime_type in _HELM_TYPES:
-            bom = fetch_helm_component(comp.reference, regdef, mime_type=comp.mime_type.value)
-            results.append((comp.name, bom))
+            helm_tasks.append((i, comp.name, comp.reference, comp.mime_type.value))
         elif comp.mime_type in _DOCKER_TYPES:
             bom = fetch_docker_component_from_reference(comp, regdef)
-            results.append((comp.name, bom))
-    return results
+            indexed.append((i, comp.name, bom))
+
+    if helm_tasks:
+        max_workers = min(len(helm_tasks), 8)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                (idx, name, executor.submit(fetch_helm_component, ref, regdef, ref_mime))
+                for idx, name, ref, ref_mime in helm_tasks
+            ]
+        for idx, name, future in futures:
+            indexed.append((idx, name, future.result()))
+
+    indexed.sort(key=lambda x: x[0])
+    return [(name, bom) for _, name, bom in indexed]
 
 
 # Backwards compatibility alias
