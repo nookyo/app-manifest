@@ -55,7 +55,7 @@ DD JSON + Build Config + regdef ──► convert --to-am ──► AMv2 JSON
 AMv2 JSON + regdef              ──► convert --to-dd ──► DD JSON
 ```
 
-DD→AMv2 conversion is **isolated** from the normal pipeline — it lives entirely in `services/dd_converter.py` and does not touch `manifest_builder`, `artifact_fetcher`, or `component_builder`.
+DD→AMv2 conversion is **isolated** from the normal pipeline — it lives entirely in `services/_dd_to_amv2.py` and `services/_amv2_to_dd.py` (re-exported via `services/dd_converter.py`) and does not touch `manifest_builder`, `artifact_fetcher`, or `component_builder`.
 
 ## Services overview
 
@@ -66,7 +66,9 @@ DD→AMv2 conversion is **isolated** from the normal pipeline — it lives entir
 | `services/component_builder.py` | Converts `ComponentMetadata` (CI JSON) → mini-manifest `CycloneDxBom` |
 | `services/artifact_fetcher.py` | Helm: runs `helm pull`, extracts Chart.yaml + nested files. Docker: creates minimal mini-manifest from `reference` (no pull, no hash) |
 | `services/helm_fetcher.py` | Backwards-compat re-export from `artifact_fetcher` — do not import directly |
-| `services/dd_converter.py` | DD ↔ AMv2 conversion logic; also handles ZIP extraction for values.schema.json and resource-profiles |
+| `services/_dd_to_amv2.py` | DD → AMv2 conversion logic (convert_dd_to_amv2 and helpers); handles ZIP extraction for values.schema.json and resource-profiles |
+| `services/_amv2_to_dd.py` | AMv2 → DD conversion logic (convert_amv2_to_dd and helpers); PURL → artifact-ref reverse mapping |
+| `services/dd_converter.py` | Public facade — re-exports `convert_dd_to_amv2`, `convert_amv2_to_dd`, and testable helpers from the two modules above |
 | `services/purl.py` | Generates and parses PURLs for Docker and Helm artifacts |
 | `services/validator.py` | Validates manifest JSON against `schemas/application-manifest.schema.json` using `jsonschema` |
 | `services/config_loader.py` | Loads and validates Build Config YAML → `BuildConfig` |
@@ -209,8 +211,8 @@ These are intentional design constraints, not bugs:
 
 | Limitation | Where | Detail |
 |-----------|-------|--------|
-| DD→AMv2 uses only the **first** chart | `dd_converter.py:100` | `dd.charts[0]` — if the DD has multiple charts, only the first becomes the app-chart |
-| AMv2→DD outputs **only** `services` and `charts` | `dd_converter.py:589` | All other DD sections (`metadata`, `infrastructures`, `configurations`, `frontends`, `smartplug`, `jobs`, etc.) are always empty — they cannot be reconstructed from AMv2 |
+| DD→AMv2 uses only the **first** chart | `_dd_to_amv2.py:87` | `dd.charts[0]` — if the DD has multiple charts, only the first becomes the app-chart |
+| AMv2→DD outputs **only** `services` and `charts` | `_amv2_to_dd.py:75` | All other DD sections (`metadata`, `infrastructures`, `configurations`, `frontends`, `smartplug`, `jobs`, etc.) are always empty — they cannot be reconstructed from AMv2 |
 | Helm `reference` **must include a version tag** | `purl.py:147` | `oci://registry/chart` without `:1.0.0` raises `ValueError` — tagless references are rejected |
 | Docker `fetch` produces **no hash** | `artifact_fetcher.py` | Image is not downloaded, only the reference is parsed |
 | Sub-charts have **no version, purl, or hashes** | `manifest_builder.py` | Sub-charts are built from config only, not from a mini-manifest |
@@ -265,7 +267,7 @@ Helm:    pkg:helm/{name}@{version}?registry_name={regdef_name}
 
 `registry_name` resolves via regdef: if `registry_host` matches `dockerConfig.groupUri` (and `namespace` matches `groupName`) → `regdef.name`; otherwise the host itself is used as fallback.
 
-PURL generation: `services/purl.py`. PURL → artifact-ref reverse: `services/dd_converter.py`.
+PURL generation: `services/purl.py`. PURL → artifact-ref reverse: `services/_amv2_to_dd.py`.
 
 ## Testing
 
