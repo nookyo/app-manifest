@@ -52,6 +52,17 @@ For each changed file in the diff, identify:
 
 Never edit blind. Read the current content, find the exact section to update, make a minimal targeted change.
 
+## Step 3.5 — State your intent before significant changes
+
+Before making a change, briefly state what you are about to do and why — one sentence is enough.
+
+| Action | Required |
+|--------|----------|
+| Add a row to a table, fix a typo | No — just do it |
+| Add a new section to an existing file | Yes — state what section and why |
+| Rewrite an existing section | Yes — state what changes and why the current text is wrong |
+| Create a new file | Yes — state the filename, purpose, and why existing docs don't cover it |
+
 ## Step 4 — Report
 
 After all changes, report:
