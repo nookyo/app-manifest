@@ -63,12 +63,34 @@ After all changes, report:
 
 ```
 docs/
-  commands.md          ← CLI commands reference
+  README.md            ← navigation index for all docs
+  commands.md          ← CLI commands reference (flags, aliases, examples)
   configuration.md     ← Build Config YAML reference
-  convert.md           ← DD↔AMv2 conversion
-  getting-started.md   ← CI integration guide
-  manifest-assembly.md ← generate algorithm
-  mini-manifests.md    ← mini-manifest format
-  purl.md              ← PURL generation
+  convert.md           ← DD↔AMv2 conversion, field mapping, round-trip
+  getting-started.md   ← CI integration guide, how to write metadata JSON
+  manifest-assembly.md ← generate algorithm step by step with examples
+  mini-manifests.md    ← mini-manifest format, file naming, collision handling
+  purl.md              ← PURL generation, Registry Definition role
+  architecture.md      ← high-level architecture and data flow
+  design-decisions.md  ← why the CLI is built the way it is (rationale)
+  examples.md          ← complete walkthrough for real-world scenarios (Jaeger)
 CLAUDE.md              ← AI context: glossary, architecture, rules, model map
 ```
+
+## Which doc to update for common changes
+
+| Change | Target file |
+|--------|-------------|
+| New CLI flag or command | `docs/commands.md` + `CLAUDE.md` Commands section |
+| New Build Config field | `docs/configuration.md` |
+| DD↔AMv2 mapping changed | `docs/convert.md` |
+| New MIME type | `CLAUDE.md` MimeType table |
+| New model field | `CLAUDE.md` Model map |
+| generate algorithm changed | `docs/manifest-assembly.md` |
+| PURL format changed | `docs/purl.md` |
+| Architectural change | `docs/architecture.md` |
+| New design decision | `docs/design-decisions.md` |
+| New behavioral rule | `CLAUDE.md` Key behavioral rules |
+| Limitation added/resolved | `CLAUDE.md` Known limitations |
+| New real-world example | `docs/examples.md` |
+| New doc file created | add link to `docs/README.md` |
