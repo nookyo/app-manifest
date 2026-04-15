@@ -92,13 +92,22 @@ CLAUDE.md              ← AI context: glossary, architecture, rules, model map
 
 | Change | Target file |
 |--------|-------------|
-| New CLI flag or command | `docs/commands.md` + `CLAUDE.md` Commands section |
+| New flag on `component`, `fetch`, `generate`, `validate`, `info` | `docs/commands.md` + `CLAUDE.md` Commands section |
+| New flag on `convert` | `docs/convert.md` (has its own options table) + `docs/commands.md` |
+| New top-level command | `docs/commands.md` + `CLAUDE.md` Commands section + `docs/README.md` |
 | New Build Config field | `docs/configuration.md` |
-| DD↔AMv2 mapping changed | `docs/convert.md` |
+| DD↔AMv2 field mapping changed | `docs/convert.md` field mapping tables |
+| DD↔AMv2 algorithm step changed | `docs/convert.md` Algorithm section |
+| New warning in `convert` | `docs/convert.md` Warnings table |
 | New MIME type | `CLAUDE.md` MimeType table |
 | New model field | `CLAUDE.md` Model map |
-| generate algorithm changed | `docs/manifest-assembly.md` |
-| PURL format changed | `docs/purl.md` |
+| `generate` algorithm changed | `docs/manifest-assembly.md` |
+| Mini-manifest format changed | `docs/mini-manifests.md` |
+| `fetch` file naming or collision logic changed | `docs/mini-manifests.md` File naming section |
+| New warning in `fetch` or `generate` | `docs/mini-manifests.md` Warnings reference table |
+| PURL format or matching logic changed | `docs/purl.md` |
+| Registry Definition matching changed | `docs/purl.md` registry_name section |
+| CI integration pattern changed | `docs/getting-started.md` |
 | Architectural change | `docs/architecture.md` |
 | New design decision | `docs/design-decisions.md` |
 | New behavioral rule | `CLAUDE.md` Key behavioral rules |
