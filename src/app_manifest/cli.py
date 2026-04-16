@@ -32,7 +32,7 @@ except PackageNotFoundError:
     _version = "unknown"
 
 
-@click.group(cls=AliasedGroup)
+@click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(version=_version, prog_name="am")
 def cli():
     """Application Manifest v2 Generator."""
@@ -335,3 +335,7 @@ def _write_output(bom, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(bom_dict, f, indent=2, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    cli()
