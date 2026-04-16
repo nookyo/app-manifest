@@ -307,6 +307,17 @@ def _build_dependencies_from_config(
     # Build config index: (name, mime_type) → ComponentConfig
     config_index = {(c.name, c.mime_type): c for c in config.components}
 
+    # Fallback: image_name → valuesPathPrefix from app-chart dependsOn in config
+    # Used when service charts are not listed as separate helm components (Pattern B)
+    app_chart_config = config_index.get(
+        (app_chart.name, MimeType.HELM_CHART) if app_chart else ("", MimeType.HELM_CHART)
+    )
+    image_name_to_vpp: dict[str, str] = {}
+    if app_chart_config:
+        for dep in app_chart_config.depends_on:
+            if dep.mime_type == MimeType.DOCKER_IMAGE and dep.values_path_prefix:
+                image_name_to_vpp[dep.name] = dep.values_path_prefix
+
     # Combined bom-ref lookups: name → bom-ref for both docker and helm
     all_docker_refs = dict(docker_bom_refs)   # image_name → bom-ref
     all_helm_refs = dict(helm_bom_refs)        # service_name → bom-ref
@@ -360,22 +371,29 @@ def _build_dependencies_from_config(
         helm_key = (service_name, MimeType.HELM_CHART)
         comp_config = config_index.get(helm_key)
 
+        mappings: dict[str, dict] = {}
         if comp_config:
-            # Build artifactMappings from config
-            mappings: dict[str, dict] = {}
+            # Pattern A: service chart is a separate helm component in config
             for dep in comp_config.depends_on:
                 if dep.mime_type == MimeType.DOCKER_IMAGE and dep.values_path_prefix:
-                    # Find the bom-ref for this docker dep by name
                     dep_bom_ref = docker_bom_refs.get(dep.name)
                     if dep_bom_ref:
                         mappings[dep_bom_ref] = {"valuesPathPrefix": dep.values_path_prefix}
+        elif docker_ref and image_name_to_vpp:
+            # Pattern B: valuesPathPrefix is in app-chart's dependsOn by image_name
+            # Reverse lookup: docker_ref → image_name
+            image_name = next(
+                (n for n, r in docker_bom_refs.items() if r == docker_ref), None
+            )
+            if image_name and image_name in image_name_to_vpp:
+                mappings[docker_ref] = {"valuesPathPrefix": image_name_to_vpp[image_name]}
 
-            if mappings:
-                # Add artifactMappings property to service helm chart component
-                # (we mutate the nested component inside app_chart.components)
-                _add_artifact_mappings_to_chart(
-                    app_chart, helm_ref, mappings
-                )
+        if mappings:
+            # Add artifactMappings property to service helm chart component
+            # (we mutate the nested component inside app_chart.components)
+            _add_artifact_mappings_to_chart(
+                app_chart, helm_ref, mappings
+            )
 
         dependencies.append(CdxDependency(
             ref=helm_ref,
