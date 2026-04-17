@@ -195,7 +195,7 @@ class TestHelmComponent:
         assert helm.properties is not None
         mappings_prop = next(
             (p for p in helm.properties
-             if p.name == "qubership:helm.values.artifactMappings"),
+             if p.name == "nc:helm.values.artifactMappings"),
             None,
         )
         assert mappings_prop is not None
@@ -215,7 +215,7 @@ class TestHelmComponent:
         assert helm.properties is not None
         mappings_prop = next(
             p for p in helm.properties
-            if p.name == "qubership:helm.values.artifactMappings"
+            if p.name == "nc:helm.values.artifactMappings"
         )
 
         docker_refs = {
@@ -390,7 +390,7 @@ class TestUmbrellaHelm:
             assert sub.properties is not None
             mappings_prop = next(
                 (p for p in sub.properties
-                 if p.name == "qubership:helm.values.artifactMappings"),
+                 if p.name == "nc:helm.values.artifactMappings"),
                 None,
             )
             assert mappings_prop is not None, f"{sub.name} has no artifactMappings"
@@ -413,7 +413,7 @@ class TestUmbrellaHelm:
             assert sub.properties is not None
             mappings_prop = next(
                 p for p in sub.properties
-                if p.name == "qubership:helm.values.artifactMappings"
+                if p.name == "nc:helm.values.artifactMappings"
             )
             for key in mappings_prop.value:
                 assert key in docker_refs
@@ -428,7 +428,7 @@ class TestUmbrellaHelm:
         assert app_chart.properties is not None
         mappings_prop = next(
             (p for p in app_chart.properties
-             if p.name == "qubership:helm.values.artifactMappings"),
+             if p.name == "nc:helm.values.artifactMappings"),
             None,
         )
         assert mappings_prop is None

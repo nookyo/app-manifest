@@ -66,30 +66,30 @@ class TestDockerPurl:
     """Tests for Docker PURL generation."""
 
     def test_ghcr_with_regdef(self):
-        """ghcr.io → registry_name=qubership."""
+        """ghcr.io → registry_id=ghcr.io (raw hostname)."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_docker_purl("ghcr.io/netcracker/jaeger:1.0", regdef)
-        assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_name=qubership"
+        assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_id=ghcr.io"
 
     def test_docker_hub(self):
         """docker.io with namespace — regdef does not match, falls back to host."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_docker_purl("docker.io/envoyproxy/envoy:v1.32.6", regdef)
-        assert purl == "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
+        assert purl == "pkg:docker/envoyproxy/envoy@v1.32.6?registry_id=docker.io"
 
     def test_docker_hub_short(self):
         """Short docker.io format — two segments."""
         purl = make_docker_purl("docker.io/openjdk:11")
-        assert purl == "pkg:docker/openjdk@11?registry_name=docker.io"
+        assert purl == "pkg:docker/openjdk@11?registry_id=docker.io"
 
     def test_aws_ecr_with_regdef(self):
-        """AWS ECR → registry_name=sandbox (namespace matches groupName)."""
+        """AWS ECR → registry_id=raw hostname."""
         regdef = load_registry_definition(FIXTURES / "regdefs/sandbox_regdef.yml")
         purl = make_docker_purl(
             "123456789.dkr.ecr.eu-west-1.amazonaws.com/docker/jaeger:build3",
             regdef,
         )
-        assert purl == "pkg:docker/docker/jaeger@build3?registry_name=sandbox"
+        assert purl == "pkg:docker/docker/jaeger@build3?registry_id=123456789.dkr.ecr.eu-west-1.amazonaws.com"
 
     def test_aws_ecr_namespace_mismatch(self):
         """AWS ECR with an unrecognized namespace — falls back to host."""
@@ -98,33 +98,33 @@ class TestDockerPurl:
             "123456789.dkr.ecr.eu-west-1.amazonaws.com/other-org/jaeger:build3",
             regdef,
         )
-        assert purl == "pkg:docker/other-org/jaeger@build3?registry_name=123456789.dkr.ecr.eu-west-1.amazonaws.com"
+        assert purl == "pkg:docker/other-org/jaeger@build3?registry_id=123456789.dkr.ecr.eu-west-1.amazonaws.com"
 
     def test_without_regdef(self):
         """Without regdef — registry_name equals the host."""
         purl = make_docker_purl("ghcr.io/netcracker/jaeger:1.0")
-        assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_name=ghcr.io"
+        assert purl == "pkg:docker/netcracker/jaeger@1.0?registry_id=ghcr.io"
 
     def test_deep_namespace(self):
         """Deep namespace: registry/a/b/c/image:tag."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_docker_purl("ghcr.io/netcracker/team/sub/image:v2", regdef)
-        assert purl == "pkg:docker/netcracker/team/sub/image@v2?registry_name=qubership"
+        assert purl == "pkg:docker/netcracker/team/sub/image@v2?registry_id=ghcr.io"
 
 
 class TestHelmPurl:
     """Tests for Helm PURL generation."""
 
     def test_oci_with_regdef(self):
-        """OCI Helm → registry_name=qubership."""
+        """OCI Helm → registry_id=raw hostname."""
         regdef = load_registry_definition(FIXTURES / "regdefs/qubership_regdef.yml")
         purl = make_helm_purl("oci://registry.qubership.org/charts/my-chart:1.0", regdef)
-        assert purl == "pkg:helm/charts/my-chart@1.0?registry_name=qubership"
+        assert purl == "pkg:helm/charts/my-chart@1.0?registry_id=registry.qubership.org"
 
     def test_without_regdef(self):
         """Without regdef — registry_name equals the host."""
         purl = make_helm_purl("oci://registry.example.com/repo/chart:2.0")
-        assert purl == "pkg:helm/repo/chart@2.0?registry_name=registry.example.com"
+        assert purl == "pkg:helm/repo/chart@2.0?registry_id=registry.example.com"
 
     def test_https_helm(self):
         """HTTPS Helm reference format."""

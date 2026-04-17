@@ -415,7 +415,7 @@ def _add_artifact_mappings_to_chart(
         if comp.bom_ref == helm_bom_ref:
             props = list(comp.properties or [])
             props.append(CdxProperty(
-                name="qubership:helm.values.artifactMappings",
+                name="nc:helm.values.artifactMappings",
                 value=mappings,
             ))
             comp.properties = props

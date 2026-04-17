@@ -91,7 +91,7 @@ def _find_app_chart(components: list[CdxComponent]) -> CdxComponent | None:
 def _extract_docker_ref_from_mappings(service_chart: CdxComponent) -> str | None:
     """Extract docker image bom-ref from artifactMappings property."""
     for prop in (service_chart.properties or []):
-        if prop.name == "qubership:helm.values.artifactMappings":
+        if prop.name in ("nc:helm.values.artifactMappings", "qubership:helm.values.artifactMappings"):
             mappings = prop.value
             if isinstance(mappings, dict) and mappings:
                 return next(iter(mappings))  # first docker bom-ref
@@ -235,7 +235,7 @@ def _purl_to_docker_artifact_ref(
         name = parts[0]
 
     # Extract registry_name from qualifiers
-    registry_name = _parse_qualifier(qualifiers_str, "registry_name")
+    registry_name = _parse_qualifier(qualifiers_str, "registry_id") or _parse_qualifier(qualifiers_str, "registry_name")
 
     # Resolve registry URI from regdef
     registry_uri = _resolve_registry_uri_docker(registry_name, regdef)
@@ -280,7 +280,7 @@ def _purl_to_helm_artifact_ref(
         namespace = ""
         name = parts[0]
 
-    registry_name = _parse_qualifier(qualifiers_str, "registry_name")
+    registry_name = _parse_qualifier(qualifiers_str, "registry_id") or _parse_qualifier(qualifiers_str, "registry_name")
     registry_base = _resolve_registry_uri_helm(registry_name, regdef)
 
     repo_path = regdef.helm_app_config.helm_group_repo_name if (
@@ -309,44 +309,32 @@ def _parse_qualifier(qualifiers_str: str, key: str) -> str:
 
 
 def _resolve_registry_uri_docker(
-    registry_name: str,
+    registry_id: str,
     regdef: RegistryDefinition,
 ) -> str:
-    """Resolve docker registry URI from registry_name via regdef.
+    """Resolve docker registry URI from registry_id (raw hostname).
 
-    Returns the groupUri if registry_name matches regdef.name,
-    otherwise returns registry_name as-is (fallback).
+    registry_id is always a raw hostname — return it as-is.
     """
-    if regdef and registry_name == regdef.name and regdef.docker_config:
-        uri = regdef.docker_config.group_uri
-        if uri:
-            for prefix in ("https://", "http://", "docker://"):
-                if uri.startswith(prefix):
-                    return uri[len(prefix):]
-            return uri
-    return registry_name
+    return registry_id
 
 
 def _resolve_registry_uri_helm(
-    registry_name: str,
+    registry_id: str,
     regdef: RegistryDefinition,
 ) -> str:
-    """Resolve helm registry base URL from registry_name via regdef.
+    """Resolve helm registry base URL from registry_id (raw hostname).
 
-    Matches by logical name (v2 reg-def) or by host (v1.0 reg-def fallback).
-    Always returns a URL with https:// prefix.
+    Matches registry_id against repositoryDomainName to get the canonical
+    URL with https:// prefix. Falls back to adding https:// to registry_id.
     """
     if regdef and regdef.helm_app_config:
         domain = regdef.helm_app_config.repository_domain_name
-        if domain:
-            # v2: registry_name is the logical regdef name
-            # v1.0: registry_name is raw hostname — match against repositoryDomainName
-            if registry_name == regdef.name or _hosts_match(registry_name, domain):
-                if not domain.startswith(("https://", "http://", "oci://")):
-                    domain = f"https://{domain}"
-                return domain.rstrip("/")
+        if domain and _hosts_match(registry_id, domain):
+            if not domain.startswith(("https://", "http://", "oci://")):
+                domain = f"https://{domain}"
+            return domain.rstrip("/")
 
-    # Fallback: ensure https:// prefix
-    if registry_name and not registry_name.startswith(("https://", "http://")):
-        return f"https://{registry_name}"
-    return registry_name
+    if registry_id and not registry_id.startswith(("https://", "http://")):
+        return f"https://{registry_id}"
+    return registry_id

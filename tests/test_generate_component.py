@@ -58,7 +58,7 @@ class TestBuildDockerComponent:
         bom = build_component_manifest(meta)
         comp = bom.model_dump(by_alias=True, exclude_none=True)["components"][0]
 
-        assert comp["purl"] == "pkg:docker/core/jaeger@build3?registry_name=sandbox.example.com"
+        assert comp["purl"] == "pkg:docker/core/jaeger@build3?registry_id=sandbox.example.com"
 
     def test_docker_purl_with_regdef(self):
         """PURL with regdef — registry_name taken from regdef."""
@@ -75,7 +75,7 @@ class TestBuildDockerComponent:
         bom = build_component_manifest(meta, regdef)
         comp = bom.model_dump(by_alias=True, exclude_none=True)["components"][0]
 
-        assert comp["purl"] == "pkg:docker/netcracker/jaeger@build3?registry_name=qubership"
+        assert comp["purl"] == "pkg:docker/netcracker/jaeger@build3?registry_id=ghcr.io"
 
     def test_docker_hashes(self):
         """Hashes are passed through to the mini-manifest."""
@@ -143,7 +143,7 @@ class TestBuildHelmComponent:
         bom = build_component_manifest(meta, regdef)
         comp = bom.model_dump(by_alias=True, exclude_none=True)["components"][0]
 
-        assert comp["purl"] == "pkg:helm/charts/qubership-jaeger@1.2.3?registry_name=qubership"
+        assert comp["purl"] == "pkg:helm/charts/qubership-jaeger@1.2.3?registry_id=registry.qubership.org"
 
     def test_helm_version_from_app_version(self):
         """appVersion takes precedence over version."""
@@ -279,7 +279,7 @@ class TestGenerateComponentCLI:
 
         comp = data["components"][0]
         assert comp["name"] == "qubership-jaeger"
-        assert "registry_name=qubership" in comp["purl"]
+        assert "registry_id=registry.qubership.org" in comp["purl"]
         assert len(comp["components"]) == 2
 
     def test_helm_metadata_without_regdef(self, tmp_path):
@@ -297,7 +297,7 @@ class TestGenerateComponentCLI:
             data = json.load(f)
 
         comp = data["components"][0]
-        assert "registry_name=registry.qubership.org" in comp["purl"]
+        assert "registry_id=registry.qubership.org" in comp["purl"]
 
     def test_creates_parent_dirs(self, tmp_path):
         """Creates parent directories for the output file."""

@@ -227,7 +227,7 @@ def _build_helm_component(
     artifact_mappings = _build_artifact_mappings(comp_config, bom_refs)
     if artifact_mappings:
         properties.append(CdxProperty(
-            name="qubership:helm.values.artifactMappings",
+            name="nc:helm.values.artifactMappings",
             value=artifact_mappings,
         ))
 
@@ -285,7 +285,7 @@ def _build_sub_chart(
     artifact_mappings = _build_artifact_mappings(comp_config, bom_refs)
     if artifact_mappings:
         properties.append(CdxProperty(
-            name="qubership:helm.values.artifactMappings",
+            name="nc:helm.values.artifactMappings",
             value=artifact_mappings,
         ))
 

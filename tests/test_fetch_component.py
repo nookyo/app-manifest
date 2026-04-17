@@ -209,7 +209,7 @@ class TestFetchHelmComponent:
 
         comp = bom.components[0]
         assert comp.purl is not None
-        assert "registry_name=qubership" in comp.purl
+        assert "registry_id=registry.qubership.org" in comp.purl
 
     def test_helm_not_installed(self):
         ref = "oci://registry.example.com/charts/my-chart:1.0.0"
@@ -492,7 +492,7 @@ class TestFetchDockerFromReference:
 
         c = bom.components[0]
         assert c.purl is not None
-        assert "registry_name=sandbox.example.com" in c.purl
+        assert "registry_id=sandbox.example.com" in c.purl
 
     def test_purl_with_regdef(self):
         from app_manifest.services.regdef_loader import load_registry_definition
@@ -504,7 +504,7 @@ class TestFetchDockerFromReference:
         c = bom.components[0]
         # registry_name must be the name from regdef, not the host
         assert c.purl is not None
-        assert "sandbox.example.com" not in c.purl or "registry_name=" in c.purl
+        assert "sandbox.example.com" not in c.purl or "registry_id=" in c.purl
 
     def test_valid_bom_structure(self):
         comp = self._make_docker_config("envoy", "docker.io/envoyproxy/envoy:v1.32.6")
