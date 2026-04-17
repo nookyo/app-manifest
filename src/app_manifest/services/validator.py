@@ -9,8 +9,9 @@ import jsonschema
 
 def _schema_path() -> Path:
     # PyInstaller extracts data files to sys._MEIPASS at runtime
-    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent.parent))
-    return base / "app_manifest" / "schemas" / "application-manifest.schema.json"
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "app_manifest" / "schemas" / "application-manifest.schema.json"
+    return Path(__file__).parent.parent / "schemas" / "application-manifest.schema.json"
 
 
 def validate_manifest(manifest: dict) -> list[str]:

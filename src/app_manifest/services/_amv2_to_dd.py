@@ -15,6 +15,7 @@ from app_manifest.models.config import MimeType
 from app_manifest.models.cyclonedx import CdxComponent, CycloneDxBom
 from app_manifest.models.dd import DdChart, DdService, DeploymentDescriptor
 from app_manifest.models.regdef import RegistryDefinition
+from app_manifest.services.purl import _hosts_match
 
 _MIME_DOCKER = MimeType.DOCKER_IMAGE.value
 _MIME_HELM = MimeType.HELM_CHART.value
@@ -332,13 +333,20 @@ def _resolve_registry_uri_helm(
 ) -> str:
     """Resolve helm registry base URL from registry_name via regdef.
 
-    Returns the repositoryDomainName if registry_name matches regdef.name,
-    otherwise returns registry_name as-is.
+    Matches by logical name (v2 reg-def) or by host (v1.0 reg-def fallback).
+    Always returns a URL with https:// prefix.
     """
-    if regdef and registry_name == regdef.name and regdef.helm_app_config:
+    if regdef and regdef.helm_app_config:
         domain = regdef.helm_app_config.repository_domain_name
         if domain:
-            if not domain.startswith(("https://", "http://", "oci://")):
-                domain = f"https://{domain}"
-            return domain.rstrip("/")
+            # v2: registry_name is the logical regdef name
+            # v1.0: registry_name is raw hostname — match against repositoryDomainName
+            if registry_name == regdef.name or _hosts_match(registry_name, domain):
+                if not domain.startswith(("https://", "http://", "oci://")):
+                    domain = f"https://{domain}"
+                return domain.rstrip("/")
+
+    # Fallback: ensure https:// prefix
+    if registry_name and not registry_name.startswith(("https://", "http://")):
+        return f"https://{registry_name}"
     return registry_name
