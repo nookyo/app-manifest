@@ -11,6 +11,8 @@ Note: only services[] and charts[] are reconstructed — all other DD sections
 are always empty because they cannot be derived from AMv2.
 """
 
+from urllib.parse import unquote
+
 from app_manifest.models.config import MimeType
 from app_manifest.models.cyclonedx import CdxComponent, CycloneDxBom
 from app_manifest.models.dd import DdChart, DdService, DeploymentDescriptor
@@ -142,7 +144,15 @@ def _docker_comp_to_dd_service(
                 docker_digest = h.content
                 break
 
+    # Read preserved image_type from property; fall back to structural inference
+    saved_image_type: str | None = None
+    for prop in (comp.properties or []):
+        if prop.name == "nc:dd:image_type":
+            saved_image_type = prop.value
+            break
+
     if service_chart:
+        image_type = saved_image_type if saved_image_type else "service"
         return DdService(
             image_name=comp.name,
             docker_repository_name=comp.group,
@@ -150,7 +160,7 @@ def _docker_comp_to_dd_service(
             full_image_name=full_image_name or "",
             docker_registry=docker_registry,
             docker_digest=docker_digest,
-            image_type="service",
+            image_type=image_type,
             service_name=service_chart.name,
             version=service_chart.version,
         )
@@ -162,7 +172,7 @@ def _docker_comp_to_dd_service(
             full_image_name=full_image_name or "",
             docker_registry=docker_registry,
             docker_digest=docker_digest,
-            image_type="image",
+            image_type=saved_image_type if saved_image_type else "image",
         )
 
 
@@ -309,32 +319,47 @@ def _parse_qualifier(qualifiers_str: str, key: str) -> str:
 
 
 def _resolve_registry_uri_docker(
-    registry_id: str,
+    registry_name: str,
     regdef: RegistryDefinition,
 ) -> str:
-    """Resolve docker registry URI from registry_id (raw hostname).
+    """Resolve docker registry URI from registry_name qualifier.
 
-    registry_id is always a raw hostname — return it as-is.
+    registry_name may be a logical name (e.g. "Shared%20Platform%20Registry")
+    or a raw hostname. If it matches regdef.name, returns groupUri. Otherwise
+    returns the decoded value as-is (raw hostname fallback).
     """
-    return registry_id
+    decoded = unquote(registry_name)
+    if regdef and regdef.name and decoded == regdef.name:
+        if regdef.docker_config and regdef.docker_config.group_uri:
+            return regdef.docker_config.group_uri
+    return decoded
 
 
 def _resolve_registry_uri_helm(
-    registry_id: str,
+    registry_name: str,
     regdef: RegistryDefinition,
 ) -> str:
-    """Resolve helm registry base URL from registry_id (raw hostname).
+    """Resolve helm registry base URL from registry_name qualifier.
 
-    Matches registry_id against repositoryDomainName to get the canonical
-    URL with https:// prefix. Falls back to adding https:// to registry_id.
+    registry_name may be a logical name or a raw hostname.
+    If it matches regdef.name, returns repositoryDomainName with https://.
+    Otherwise matches by host or falls back to adding https://.
     """
-    if regdef and regdef.helm_app_config:
-        domain = regdef.helm_app_config.repository_domain_name
-        if domain and _hosts_match(registry_id, domain):
+    decoded = unquote(registry_name)
+    if regdef and regdef.name and decoded == regdef.name:
+        if regdef.helm_app_config and regdef.helm_app_config.repository_domain_name:
+            domain = regdef.helm_app_config.repository_domain_name
             if not domain.startswith(("https://", "http://", "oci://")):
                 domain = f"https://{domain}"
             return domain.rstrip("/")
 
-    if registry_id and not registry_id.startswith(("https://", "http://")):
-        return f"https://{registry_id}"
-    return registry_id
+    if regdef and regdef.helm_app_config:
+        domain = regdef.helm_app_config.repository_domain_name
+        if domain and _hosts_match(decoded, domain):
+            if not domain.startswith(("https://", "http://", "oci://")):
+                domain = f"https://{domain}"
+            return domain.rstrip("/")
+
+    if decoded and not decoded.startswith(("https://", "http://")):
+        return f"https://{decoded}"
+    return decoded

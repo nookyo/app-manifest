@@ -19,6 +19,8 @@ Examples:
     → "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
 """
 
+from urllib.parse import quote
+
 from app_manifest.models.regdef import RegistryDefinition
 
 
@@ -53,13 +55,12 @@ def make_docker_purl(
     if not registry:
         raise ValueError(f"Invalid Docker reference: cannot determine registry from '{reference}'")
 
-    # Resolve registry_id from the Registry Definition
-    registry_id = _resolve_registry_id(registry, "docker", regdef, namespace)
+    registry_name = _resolve_registry_name(registry, "docker", regdef, namespace)
 
     if namespace:
-        return f"pkg:docker/{namespace}/{name}@{version}?registry_id={registry_id}"
+        return f"pkg:docker/{namespace}/{name}@{version}?registry_name={registry_name}"
     else:
-        return f"pkg:docker/{name}@{version}?registry_id={registry_id}"
+        return f"pkg:docker/{name}@{version}?registry_name={registry_name}"
 
 
 def _parse_docker_ref_parts(reference: str) -> tuple[str, str, str, str]:
@@ -148,25 +149,24 @@ def make_helm_purl(
     if not registry:
         raise ValueError(f"Invalid Helm reference: cannot determine registry from '{reference}'")
 
-    # Resolve registry_id
-    registry_id = _resolve_registry_id(registry, "helm", regdef)
+    registry_name = _resolve_registry_name(registry, "helm", regdef)
 
     if namespace:
-        return f"pkg:helm/{namespace}/{name}@{version}?registry_id={registry_id}"
+        return f"pkg:helm/{namespace}/{name}@{version}?registry_name={registry_name}"
     else:
-        return f"pkg:helm/{name}@{version}?registry_id={registry_id}"
+        return f"pkg:helm/{name}@{version}?registry_name={registry_name}"
 
 
-def _resolve_registry_id(
+def _resolve_registry_name(
     registry_host: str,
     artifact_type: str,
     regdef: RegistryDefinition | None,
     namespace: str = "",
 ) -> str:
-    """Resolve registry_id from the registry host.
+    """Resolve registry_name for PURL qualifier.
 
-    Always returns the raw registry hostname — registry_id in PURL is a host identifier,
-    not a logical name. The regdef is used only for Docker namespace matching (v2 reg-def).
+    Returns regdef.name (URL-encoded) if the host matches a known registry,
+    otherwise falls back to the raw registry hostname.
     """
     if not regdef:
         return registry_host
@@ -182,12 +182,12 @@ def _resolve_registry_id(
         for uri in uris:
             if uri and _hosts_match(registry_host, uri):
                 if not group_name or _namespace_matches(namespace, group_name):
-                    return registry_host
+                    return quote(regdef.name, safe="")
 
     if artifact_type == "helm" and regdef.helm_app_config:
         domain = regdef.helm_app_config.repository_domain_name
         if domain and _hosts_match(registry_host, domain):
-            return registry_host
+            return quote(regdef.name, safe="")
 
     # Fallback: return the host itself
     return registry_host

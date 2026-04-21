@@ -69,12 +69,31 @@ def convert_dd_to_amv2(
     # Map: service_name → docker bom-ref (for artifactMappings)
     service_name_to_docker_ref: dict[str, str] = {}
 
+    # Build index from build_config: image_name → True if in app-chart dependsOn with valuesPathPrefix
+    # This allows image_type="image" services with service_name to get a helm chart via build_config
+    _app_chart_config = next(
+        (c for c in config.components if c.mime_type == MimeType.HELM_CHART),
+        None,
+    )
+    _image_names_in_app_chart: set[str] = set()
+    if _app_chart_config:
+        for dep in _app_chart_config.depends_on:
+            if dep.mime_type == MimeType.DOCKER_IMAGE and dep.values_path_prefix:
+                _image_names_in_app_chart.add(dep.name)
+
     for service in dd.services:
         docker_comp = _dd_service_to_docker(service, regdef, warnings)
         docker_components.append(docker_comp)
         docker_bom_refs[service.image_name] = docker_comp.bom_ref
 
-        if service.image_type == "service" and service.service_name:
+        is_service_chart = service.image_type == "service" and service.service_name
+        is_image_with_chart = (
+            service.image_type == "image"
+            and service.service_name
+            and service.image_name in _image_names_in_app_chart
+        )
+
+        if is_service_chart or is_image_with_chart:
             helm_comp = _dd_service_to_helm(service, regdef, warnings)
             service_helm_charts.append(helm_comp)
             helm_bom_refs[service.service_name] = helm_comp.bom_ref
@@ -157,6 +176,8 @@ def _dd_service_to_docker(
     if service.docker_digest:
         hashes.append(CdxHash(alg="SHA-256", content=service.docker_digest))
 
+    properties = [CdxProperty(name="nc:dd:image_type", value=service.image_type)]
+
     return CdxComponent(
         bom_ref=bom_ref,
         type="container",
@@ -166,6 +187,7 @@ def _dd_service_to_docker(
         version=service.docker_tag,
         purl=purl,
         hashes=hashes or None,
+        properties=properties,
     )
 
 

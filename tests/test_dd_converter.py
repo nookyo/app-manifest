@@ -116,7 +116,7 @@ class TestPurlToDockerArtifactRef:
 
     def test_basic(self, artifactory_regdef):
         full, registry = _purl_to_docker_artifact_ref(
-            "pkg:docker/cloud-core/my-image@build2?registry_id=artifactorycn.netcracker.com:17004",
+            "pkg:docker/cloud-core/my-image@build2?registry_name=artifactorycn.netcracker.com:17004",
             artifactory_regdef,
         )
         assert full == "artifactorycn.netcracker.com:17004/cloud-core/my-image:build2"
@@ -125,7 +125,7 @@ class TestPurlToDockerArtifactRef:
     def test_unknown_registry_name_fallback(self, artifactory_regdef):
         """Unknown registry_name → use registry_name as-is in URI."""
         full, registry = _purl_to_docker_artifact_ref(
-            "pkg:docker/ns/img@v1?registry_id=unknown-registry",
+            "pkg:docker/ns/img@v1?registry_name=unknown-registry",
             artifactory_regdef,
         )
         assert full == "unknown-registry/ns/img:v1"
@@ -137,7 +137,7 @@ class TestPurlToDockerArtifactRef:
     def test_missing_version_raises(self, artifactory_regdef):
         with pytest.raises(ValueError):
             _purl_to_docker_artifact_ref(
-                "pkg:docker/ns/img?registry_id=x", artifactory_regdef
+                "pkg:docker/ns/img?registry_name=x", artifactory_regdef
             )
 
 
@@ -145,7 +145,7 @@ class TestPurlToHelmArtifactRef:
 
     def test_basic_with_repo_name(self, artifactory_regdef):
         full, registry = _purl_to_helm_artifact_ref(
-            "pkg:helm/my-chart@1.0.0?registry_id=artifactorycn.netcracker.com",
+            "pkg:helm/my-chart@1.0.0?registry_name=artifactorycn.netcracker.com",
             artifactory_regdef,
         )
         assert full == "https://artifactorycn.netcracker.com/nc.helm.charts/my-chart-1.0.0.tgz"
@@ -154,7 +154,7 @@ class TestPurlToHelmArtifactRef:
     def test_complex_version(self, artifactory_regdef):
         full, _ = _purl_to_helm_artifact_ref(
             "pkg:helm/cloud-integration-platform@0.0.0-release-2025.4-20251120.144057-26"
-            "?registry_id=artifactorycn.netcracker.com",
+            "?registry_name=artifactorycn.netcracker.com",
             artifactory_regdef,
         )
         assert full.endswith(
@@ -221,7 +221,7 @@ class TestConvertDdToAmv2:
         for comp in docker:
             assert comp.purl is not None
             assert comp.purl.startswith("pkg:docker/")
-            assert "registry_id=" in comp.purl
+            assert "registry_name=" in comp.purl
 
     def test_standalone_component_created(self, dd_from_file, artifactory_regdef):
         bom, _ = self._convert(dd_from_file, artifactory_regdef)
@@ -304,9 +304,9 @@ class TestConvertDdToAmv2:
 def _make_simple_bom(
     app_chart_name="my-app",
     app_chart_version="1.0.0",
-    app_chart_purl="pkg:helm/my-app@1.0.0?registry_id=artifactorycn.netcracker.com",
+    app_chart_purl="pkg:helm/my-app@1.0.0?registry_name=artifactorycn.netcracker.com",
     docker_name="my-service-image",
-    docker_purl="pkg:docker/cloud-core/my-service-image@build2?registry_id=artifactorycn.netcracker.com:17004",
+    docker_purl="pkg:docker/cloud-core/my-service-image@build2?registry_name=artifactorycn.netcracker.com:17004",
     service_chart_name="my-service",
     service_chart_version="1.0.0",
 ) -> CycloneDxBom:
@@ -456,7 +456,7 @@ class TestConvertAmv2ToDd:
             name="standalone-img",
             group="cloud-core",
             version="v1",
-            purl="pkg:docker/cloud-core/standalone-img@v1?registry_id=artifactorycn.netcracker.com:17004",
+            purl="pkg:docker/cloud-core/standalone-img@v1?registry_name=artifactorycn.netcracker.com:17004",
         )
         bom = CycloneDxBom(
             serial_number=f"urn:uuid:{uuid.uuid4()}",

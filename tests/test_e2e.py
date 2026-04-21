@@ -84,42 +84,42 @@ class TestDockerReferenceFormats:
             "docker.io/prom/prometheus:v2.52.0",
             "v2.52.0",
             "prom",
-            "pkg:docker/prom/prometheus@v2.52.0?registry_id=docker.io",
+            "pkg:docker/prom/prometheus@v2.52.0?registry_name=docker.io",
         ),
         # docker.io without explicit prefix (org/image)
         (
             "grafana/grafana:10.4.2",
             "10.4.2",
             "grafana",
-            "pkg:docker/grafana/grafana@10.4.2?registry_id=docker.io",
+            "pkg:docker/grafana/grafana@10.4.2?registry_name=docker.io",
         ),
         # bare image name → library namespace
         (
             "nginx:1.27.0",
             "1.27.0",
             "library",
-            "pkg:docker/library/nginx@1.27.0?registry_id=docker.io",
+            "pkg:docker/library/nginx@1.27.0?registry_name=docker.io",
         ),
         # GitHub Container Registry
         (
             "ghcr.io/oauth2-proxy/oauth2-proxy:v7.7.0",
             "v7.7.0",
             "oauth2-proxy",
-            "pkg:docker/oauth2-proxy/oauth2-proxy@v7.7.0?registry_id=ghcr.io",
+            "pkg:docker/oauth2-proxy/oauth2-proxy@v7.7.0?registry_name=ghcr.io",
         ),
         # Private registry with namespace
         (
             "sandbox.example.com/monitoring/alertmanager:v0.27.0",
             "v0.27.0",
             "monitoring",
-            "pkg:docker/monitoring/alertmanager@v0.27.0?registry_id=sandbox.example.com",
+            "pkg:docker/monitoring/alertmanager@v0.27.0?registry_name=sandbox.example.com",
         ),
         # registry without namespace (host/image only)
         (
             "my-registry.corp.com/myapp:1.0.0",
             "1.0.0",
             None,  # no namespace → group is absent
-            "pkg:docker/myapp@1.0.0?registry_id=my-registry.corp.com",
+            "pkg:docker/myapp@1.0.0?registry_name=my-registry.corp.com",
         ),
     ])
     def test_reference_parsed_correctly(self, reference, exp_version, exp_group, exp_purl_fragment):
@@ -726,13 +726,13 @@ class TestJaegerFullPipeline:
     def test_envoy_purl(self, tmp_path):
         data = self._build_manifest(tmp_path)
         comp = next(c for c in data["components"] if c["name"] == "envoy")
-        assert comp["purl"] == "pkg:docker/envoyproxy/envoy@v1.32.6?registry_id=docker.io"
+        assert comp["purl"] == "pkg:docker/envoyproxy/envoy@v1.32.6?registry_name=docker.io"
 
     def test_openjdk_purl(self, tmp_path):
         """openjdk — docker.io/library/openjdk:11 → group=library."""
         data = self._build_manifest(tmp_path)
         comp = next(c for c in data["components"] if c["name"] == "openjdk")
-        assert comp["purl"] == "pkg:docker/library/openjdk@11?registry_id=docker.io"
+        assert comp["purl"] == "pkg:docker/library/openjdk@11?registry_name=docker.io"
         assert comp.get("group") == "library"
 
     def test_helm_depends_on_11_images(self, tmp_path):
